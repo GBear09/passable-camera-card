@@ -5,7 +5,7 @@ import {
   svg,
 } from "https://unpkg.com/lit@3.0.0/index.js?module";
 
-const CARD_VERSION = "1.0.0";
+const CARD_VERSION = "1.0.1";
 
 console.info(
   `%c  PASSABLE-CAMERA-CARD  %c v${CARD_VERSION} `,
@@ -245,8 +245,9 @@ class CameraDashboardCard extends LitElement {
   }
 
   setConfig(config) {
+    if (!config) throw new Error("Invalid configuration");
     this.config = config;
-    if (this.config.camera_entity) {
+    if (this.hass && this.config.camera_entity) {
       this._discoverEntities();
     } else {
       this._entities = null;
@@ -255,7 +256,7 @@ class CameraDashboardCard extends LitElement {
 
   updated(changedProps) {
     super.updated(changedProps);
-    if (changedProps.has("hass") && !this._entities && this.hass && this.config && this.config.camera_entity) {
+    if ((changedProps.has("hass") || changedProps.has("config")) && this.hass && this.config && this.config.camera_entity) {
       this._discoverEntities();
     }
     
@@ -378,12 +379,14 @@ class CameraDashboardCard extends LitElement {
   }
 
   _getActiveCameraState() {
+    if (!this.hass || !this.hass.states || !this._entities) return null;
     const activeEntity =
       this._activeLens === "zoom" &&
+      this._entities.camera_zoom &&
       this.hass.states[this._entities.camera_zoom]
         ? this._entities.camera_zoom
         : this._entities.camera_wide;
-    return this.hass.states[activeEntity];
+    return activeEntity && this.hass.states[activeEntity] ? this.hass.states[activeEntity] : null;
   }
 
   // --- PROGRAMMATIC WEBRTC CARD INITIALIZER ---
@@ -691,15 +694,34 @@ class CameraDashboardCard extends LitElement {
   render() {
     if (!this.config || !this.config.camera_entity) {
       return html`
-        <ha-card style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 250px; box-sizing: border-box;">
-          <ha-icon icon="mdi:cctv" style="color: var(--secondary-text-color); --mdc-icon-size: 48px; margin-bottom: 12px;"></ha-icon>
-          <div style="font-size: 16px; font-weight: 500; color: var(--primary-text-color);">Camera Dashboard</div>
-          <div style="font-size: 13px; color: var(--secondary-text-color); text-align: center; margin-top: 8px;">Please select your primary camera entity to begin.</div>
+        <ha-card style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; box-sizing: border-box; text-align: center;">
+          <ha-icon icon="mdi:cctv" style="color: var(--primary-color, #03a9f4); --mdc-icon-size: 48px; margin-bottom: 12px;"></ha-icon>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-text-color);">Passable Camera Card</div>
+          <div style="font-size: 13px; color: var(--secondary-text-color); margin-top: 6px;">Please select a primary camera entity to begin.</div>
         </ha-card>
       `;
     }
 
-    if (!this.hass || !this._entities) return html`<ha-card style="padding: 20px;">Loading configuration...</ha-card>`;
+    if (!this.hass) {
+      return html`
+        <ha-card style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; box-sizing: border-box; text-align: center;">
+          <ha-icon icon="mdi:cctv" style="color: var(--primary-color, #03a9f4); --mdc-icon-size: 48px; margin-bottom: 12px;"></ha-icon>
+          <div style="font-size: 16px; font-weight: 600; color: var(--primary-text-color);">Passable Camera Card</div>
+        </ha-card>
+      `;
+    }
+
+    if (!this._entities && this.config.camera_entity) {
+      this._discoverEntities();
+    }
+
+    if (!this._entities) {
+      return html`
+        <ha-card style="padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; box-sizing: border-box; text-align: center;">
+          <div style="font-size: 14px; color: var(--secondary-text-color);">Loading camera configuration...</div>
+        </ha-card>
+      `;
+    }
 
     const camState = this._getActiveCameraState();
     const hasTelephoto = !!this.hass.states[this._entities.camera_zoom];
@@ -2651,34 +2673,88 @@ class CameraDashboardCard extends LitElement {
 class CameraDashboardEditor extends LitElement {
   static properties = { hass: { attribute: false }, _config: { state: true } };
 
-  setConfig(config) { this._config = config; }
+  setConfig(config) {
+    this._config = config;
+  }
 
   _schema = [
     { name: "camera_entity", label: "Primary Camera Entity", selector: { entity: { domain: "camera" } } },
     { name: "frigate_client_id", label: "Frigate Integration ID", selector: { text: {} } },
     { name: "frigate_camera_entity", label: "Frigate Camera Entity", selector: { entity: { domain: "camera" } } },
     { name: "title", label: "Title Override", selector: { text: {} } },
-    { name: "hide_ptz", label: "Hide PTZ", selector: { boolean: {} } },
+    { name: "hide_ptz", label: "Hide PTZ Controls", selector: { boolean: {} } },
     { name: "hide_zoom", label: "Hide Zoom Slider", selector: { boolean: {} } },
   ];
 
   _valueChanged(ev) {
     if (!this._config || !this.hass) return;
-    const event = new Event("config-changed", { bubbles: true, composed: true });
-    event.detail = { config: { ...this._config, ...ev.detail.value } };
+    const value = ev.detail ? ev.detail.value : null;
+    if (!value) return;
+    this._config = { ...this._config, ...value };
+    const event = new CustomEvent("config-changed", {
+      detail: { config: this._config },
+      bubbles: true,
+      composed: true,
+    });
     this.dispatchEvent(event);
   }
 
   render() {
     if (!this.hass || !this._config) return html``;
-    return html`<div style="padding: 0 16px 16px;"><ha-form .hass=${this.hass} .data=${this._config} .schema=${this._schema} .computeLabel=${(s) => s.label || s.name} @value-changed=${this._valueChanged}></ha-form></div>`;
+    return html`
+      <div style="padding: 16px;">
+        <ha-form
+          .hass=${this.hass}
+          .data=${this._config}
+          .schema=${this._schema}
+          .computeLabel=${(s) => s.label || s.name}
+          @value-changed=${this._valueChanged}
+        ></ha-form>
+      </div>
+    `;
   }
 }
 
-if (!customElements.get("passable-camera-card-editor")) customElements.define("passable-camera-card-editor", CameraDashboardEditor);
-CameraDashboardCard.getConfigElement = () => document.createElement("passable-camera-card-editor");
-CameraDashboardCard.getStubConfig = () => ({ type: "custom:passable-camera-card", camera_entity: "", frigate_client_id: "frigate", frigate_camera_entity: "", hide_ptz: false, hide_zoom: false });
+if (!customElements.get("passable-camera-card-editor")) {
+  customElements.define("passable-camera-card-editor", CameraDashboardEditor);
+}
+if (!customElements.get("camera-card-editor")) {
+  class LegacyCameraCardEditor extends CameraDashboardEditor {}
+  customElements.define("camera-card-editor", LegacyCameraCardEditor);
+}
 
-if (!customElements.get("passable-camera-card")) customElements.define("passable-camera-card", CameraDashboardCard);
+CameraDashboardCard.getConfigElement = () => document.createElement("passable-camera-card-editor");
+
+CameraDashboardCard.getStubConfig = (hass, entities, entitiesFallback) => {
+  let cameraEntity = "";
+  if (entities && entities.length > 0) {
+    cameraEntity = entities.find((e) => e.startsWith("camera.")) || "";
+  }
+  if (!cameraEntity && hass && hass.states) {
+    cameraEntity = Object.keys(hass.states).find((e) => e.startsWith("camera.")) || "";
+  }
+  return {
+    type: "custom:passable-camera-card",
+    camera_entity: cameraEntity,
+    frigate_client_id: "frigate",
+    frigate_camera_entity: "",
+    hide_ptz: false,
+    hide_zoom: false,
+  };
+};
+
+if (!customElements.get("passable-camera-card")) {
+  customElements.define("passable-camera-card", CameraDashboardCard);
+}
+if (!customElements.get("camera-card")) {
+  class LegacyCameraCard extends CameraDashboardCard {}
+  customElements.define("camera-card", LegacyCameraCard);
+}
+
 window.customCards = window.customCards || [];
-window.customCards.push({ type: "custom:passable-camera-card", name: "Passable Camera Card", preview: true, description: "A comprehensive LitElement dashboard card for cameras featuring live stream, WebRTC, PTZ controls, Frigate event history, and timeline playback." });
+window.customCards.push({
+  type: "passable-camera-card",
+  name: "Passable Camera Card",
+  preview: true,
+  description: "A comprehensive LitElement dashboard card for cameras featuring live stream, WebRTC, PTZ controls, Frigate event history, and timeline playback.",
+});
