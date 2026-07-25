@@ -1,0 +1,26 @@
+{
+  "name": "passable-camera-card",
+  "version": "1.0.0",
+  "description": "A comprehensive Home Assistant Lovelace card for PTZ and floodlight cameras featuring live streaming, WebRTC support, PTZ controls, Frigate event history, and timeline playback.",
+  "main": "passable-camera-card.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GBear09/passable-camera-card.git"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "custom-card",
+    "hacs",
+    "camera",
+    "ptz",
+    "frigate",
+    "webrtc"
+  ],
+  "author": "GBear09",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GBear09/passable-camera-card/issues"
+  },
+  "homepage": "https://github.com/GBear09/passable-camera-card#readme"
+}
