@@ -1,5 +1,6 @@
 {
   "name": "Passable Camera Card",
+  "filename": "passable-camera-card.js",
   "render_readme": true,
-  "filename": "passable-camera-card.js"
+  "content_in_root": true
 }
