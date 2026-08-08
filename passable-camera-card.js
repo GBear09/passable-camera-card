@@ -5,7 +5,7 @@ import {
   svg,
 } from "https://unpkg.com/lit@3.0.0/index.js?module";
 
-const CARD_VERSION = "1.0.1";
+const CARD_VERSION = "1.0.2";
 
 console.info(
   `%c  PASSABLE-CAMERA-CARD  %c v${CARD_VERSION} `,
@@ -306,11 +306,21 @@ class CameraDashboardCard extends LitElement {
       .replace("_clear_2", "")
       .replace("_clear", "");
 
-    const getE = (domain, suffix) => {
-      const id = `${domain}.${cleanBase}_${suffix}`;
-      return this.hass.states[id] ? id : null;
+    const findEntity = (domain, suffixes) => {
+      if (!Array.isArray(suffixes)) suffixes = [suffixes];
+      for (const s of suffixes) {
+        const id1 = s ? `${domain}.${cleanBase}_${s}` : `${domain}.${cleanBase}`;
+        if (this.hass.states[id1]) return id1;
+
+        const shortPrefix = cleanBase.split("_")[0];
+        const id2 = s ? `${domain}.${shortPrefix}_${s}` : `${domain}.${shortPrefix}`;
+        if (this.hass.states[id2]) return id2;
+      }
+      return null;
     };
-    const getButton = (suffix) => `button.${cleanBase}_${suffix}`;
+
+    const getE = (domain, suffix) => findEntity(domain, suffix);
+    const getButton = (suffix) => findEntity("button", suffix);
 
     // Derive Frigate Base from standard entity if provided
     let frigateBase = "";
@@ -337,44 +347,46 @@ class CameraDashboardCard extends LitElement {
       frigate_review_alerts: getFrigate("switch", "review_alerts"),
       frigate_review_detections: getFrigate("switch", "review_detections"),
 
-      motion: getE("binary_sensor", "motion"),
-      person: getE("binary_sensor", "person"),
-      vehicle: getE("binary_sensor", "vehicle"),
-      animal: getE("binary_sensor", "animal"),
-      sens_motion: getE("number", "motion_sensitivity"),
-      sens_person: getE("number", "ai_person_sensitivity"),
-      sens_vehicle: getE("number", "ai_vehicle_sensitivity"),
-      sens_animal: getE("number", "ai_animal_sensitivity"),
-      ptz_up: getButton("ptz_up"),
-      ptz_down: getButton("ptz_down"),
-      ptz_left: getButton("ptz_left"),
-      ptz_right: getButton("ptz_right"),
-      ptz_stop: getButton("ptz_stop"),
-      ptz_calibrate: getButton("ptz_calibrate"),
-      ptz_zoom: getE("number", "zoom"),
+      motion: getE("binary_sensor", ["motion", "cell_motion"]),
+      person: getE("binary_sensor", ["person", "person_detection"]),
+      vehicle: getE("binary_sensor", ["vehicle", "vehicle_detection"]),
+      animal: getE("binary_sensor", ["animal", "pet", "dog", "cat"]),
+      sens_motion: getE("number", ["motion_sensitivity", "sensitivity"]),
+      sens_person: getE("number", ["ai_person_sensitivity", "person_sensitivity"]),
+      sens_vehicle: getE("number", ["ai_vehicle_sensitivity", "vehicle_sensitivity"]),
+      sens_animal: getE("number", ["ai_animal_sensitivity", "animal_sensitivity", "pet_sensitivity"]),
+      ptz_up: getButton(["ptz_up", "up"]),
+      ptz_down: getButton(["ptz_down", "down"]),
+      ptz_left: getButton(["ptz_left", "left"]),
+      ptz_right: getButton(["ptz_right", "right"]),
+      ptz_stop: getButton(["ptz_stop", "stop"]),
+      ptz_calibrate: getButton(["ptz_calibrate", "calibrate_ptz", "calibrate"]),
+      restart: getButton(["restart", "reboot"]),
+      ptz_zoom: getE("number", ["zoom", "ptz_zoom"]),
       ptz_pan_pos: getE("sensor", "ptz_pan_position"),
       ptz_tilt_pos: getE("sensor", "ptz_tilt_position"),
-      guard_go_to: getButton("guard_go_to"),
-      guard_set: getButton("guard_set_current_position"),
-      guard_return: getE("switch", "guard_return"),
-      guard_time: getE("number", "guard_return_time"),
-      auto_track: getE("switch", "auto_tracking"),
-      auto_track_method: getE("select", "auto_track_method"),
-      floodlight: getE("light", "floodlight"),
+      guard_go_to: getButton(["guard_go_to", "ptz_guard_go_to"]),
+      guard_set: getButton(["guard_set_current_position", "ptz_guard_set"]),
+      guard_return: getE("switch", ["guard_return", "ptz_guard_return"]),
+      guard_time: getE("number", ["guard_return_time", "ptz_guard_return_time"]),
+      auto_track: getE("switch", ["auto_tracking", "auto_track"]),
+      auto_track_method: getE("select", ["auto_track_method", "auto_tracking_method"]),
+      floodlight: findEntity("light", ["floodlight"]) || findEntity("switch", ["floodlight"]),
       floodlight_mode: getE("select", "floodlight_mode"),
       floodlight_event_mode: getE("select", "floodlight_event_mode"),
       siren: getE("siren", "siren"),
-      siren_event: getE("switch", "siren_on_event"),
+      siren_event: getE("switch", ["siren_on_event", "siren_mode"]),
       day_night_mode: getE("select", "day_night_mode"),
       day_night_state: getE("sensor", "day_night_state"),
-      ir_lights: getE("switch", "infrared_lights_in_night_mode"),
-      record: getE("switch", "record"),
+      ir_lights: getE("switch", ["infrared_lights_in_night_mode", "ir_lights"]),
+      record: getE("switch", ["record", "continuous_recording"]),
       record_audio: getE("switch", "record_audio"),
-      push_notif: getE("switch", "push_notifications"),
+      push_notif: getE("switch", ["push_notifications", "push_notification"]),
       email_event: getE("switch", "email_on_event"),
-      ftp_upload: getE("switch", "ftp_upload"),
+      ftp_upload: getE("switch", ["ftp_upload", "ftp"]),
       volume: getE("number", "volume"),
-      status_led: getE("light", "status_led"),
+      status_led: findEntity("light", "status_led") || findEntity("switch", "status_led"),
+      firmware: findEntity("update", ["firmware", "firmware_update"]),
     };
   }
 
@@ -1440,21 +1452,59 @@ class CameraDashboardCard extends LitElement {
         ${this._renderToggleRow(this._entities.status_led, "Status LED")}
         ${this._renderSliderRow(this._entities.volume, "Speaker Volume")}
         ${this._renderSliderRow(this._entities.guard_time, "Guard Return Time")}
+        ${this._renderUpdateRow(this._entities.firmware, "Firmware Status")}
         
-        <div style="margin-top: 16px;">
-          <button
-            class="action-btn secondary ${this._btnStates['ptz_cal'] === 'confirm' ? 'btn-confirm' : this._btnStates['ptz_cal'] === 'success' ? 'btn-success' : ''}"
-            style="width: 100%;"
-            @click=${() => this._handleSafeAction('ptz_cal', this._entities.ptz_calibrate)}
-          >
-            ${this._btnStates['ptz_cal'] === 'confirm' ? 'Confirm Calibration?' : this._btnStates['ptz_cal'] === 'success' ? 'Calibration Started!' : 'Calibrate PTZ'}
-          </button>
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 10px;">
+          ${this._entities.ptz_calibrate ? html`
+            <button
+              class="action-btn secondary ${this._btnStates['ptz_cal'] === 'confirm' ? 'btn-confirm' : this._btnStates['ptz_cal'] === 'success' ? 'btn-success' : ''}"
+              style="width: 100%;"
+              @click=${() => this._handleSafeAction('ptz_cal', this._entities.ptz_calibrate)}
+            >
+              ${this._btnStates['ptz_cal'] === 'confirm' ? 'Confirm Calibration?' : this._btnStates['ptz_cal'] === 'success' ? 'Calibration Started!' : 'Calibrate PTZ'}
+            </button>
+          ` : ''}
+
+          ${this._entities.restart ? html`
+            <button
+              class="action-btn secondary ${this._btnStates['restart'] === 'confirm' ? 'btn-confirm' : this._btnStates['restart'] === 'success' ? 'btn-success' : ''}"
+              style="width: 100%; color: var(--error-color, #ef4444); border-color: rgba(239, 68, 68, 0.3);"
+              @click=${() => this._handleSafeAction('restart', this._entities.restart)}
+            >
+              <ha-icon icon="mdi:restart" style="margin-right: 6px; --mdc-icon-size: 18px;"></ha-icon>
+              ${this._btnStates['restart'] === 'confirm' ? 'Confirm Restart Camera?' : this._btnStates['restart'] === 'success' ? 'Restarting Camera...' : 'Restart Camera'}
+            </button>
+          ` : ''}
         </div>
       </div>
 
       ${this._renderPopup(this._entities.day_night_mode, "Day / Night Mode")}
       ${this._renderPopup(this._entities.floodlight_mode, "Floodlight Mode")}
       ${this._renderPopup(this._entities.floodlight_event_mode, "Floodlight Event Mode")}
+    `;
+  }
+
+  _renderUpdateRow(entity_id, label) {
+    if (!entity_id) return "";
+    const ent = this.hass.states[entity_id];
+    if (!ent) return "";
+    const hasUpdate = ent.state === "on";
+    const installed = ent.attributes?.installed_version || "";
+    const latest = ent.attributes?.latest_version || "";
+
+    return html`
+      <div class="diag-row">
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 14px; font-weight: 500;">${label}</span>
+          ${installed ? html`<span style="font-size: 11px; color: var(--secondary-text-color);">Installed: v${installed}</span>` : ""}
+        </div>
+        <div>
+          ${hasUpdate
+            ? html`<span style="font-size: 12px; font-weight: 600; color: var(--warning-color, #f59e0b); background: rgba(245, 158, 11, 0.15); padding: 4px 8px; border-radius: 12px;">Update Available (${latest})</span>`
+            : html`<span style="font-size: 12px; font-weight: 500; color: var(--success-color, #10b981);">Up to date</span>`
+          }
+        </div>
+      </div>
     `;
   }
 
