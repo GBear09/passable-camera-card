@@ -5,7 +5,7 @@ import {
   svg,
 } from "https://unpkg.com/lit@3.0.0/index.js?module";
 
-const CARD_VERSION = "1.0.3";
+const CARD_VERSION = "1.0.4";
 
 console.info(
   `%c  PASSABLE-CAMERA-CARD  %c v${CARD_VERSION} `,
@@ -152,6 +152,18 @@ class CameraDashboardCard extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    if (this._webrtcElement) {
+      try {
+        if (typeof this._webrtcElement.ondisconnect === "function") {
+          this._webrtcElement.ondisconnect();
+        }
+      } catch (e) {
+        console.warn("[Camera Card] Error disconnecting WebRTC stream:", e);
+      }
+      this._webrtcElement = null;
+      this._webrtcConfig = null;
+      this._cachedVideo = null;
+    }
     if (this._hls) {
         this._hls.destroy();
         this._hls = null;
@@ -283,6 +295,17 @@ class CameraDashboardCard extends LitElement {
             this._initWebrtc(camState, wrapper, forceRemount);
             setTimeout(() => this._forceUnmute(), 500); // Attempt to auto-unmute once mounted
         }
+    } else if (this.config.is_popup && this._activeTab !== "live" && this._webrtcElement) {
+        try {
+            if (typeof this._webrtcElement.ondisconnect === "function") {
+                this._webrtcElement.ondisconnect();
+            }
+        } catch (e) {
+            console.warn("[Camera Card] Error disconnecting WebRTC on tab switch:", e);
+        }
+        this._webrtcElement = null;
+        this._webrtcConfig = null;
+        this._cachedVideo = null;
     }
     
     if ((changedProps.has("_activeTab") && this._activeTab === "history" && !this._events) ||
@@ -419,9 +442,10 @@ class CameraDashboardCard extends LitElement {
     this._switchingLens = true;
     this._activeLens = this._activeLens === "wide" ? "zoom" : "wide";
     if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
+    const timeout = this.config?.is_popup ? 6000 : 1500;
     this._switchLensTimer = setTimeout(() => {
       this._switchingLens = false;
-    }, 2000);
+    }, timeout);
   }
 
   // --- PROGRAMMATIC WEBRTC CARD INITIALIZER ---
@@ -448,58 +472,68 @@ class CameraDashboardCard extends LitElement {
         muted: true
     };
 
-    // Re-mount the DOM element entirely if the mic toggles (requires audio permissions) or on first mount
-    if (forceRemount || !this._webrtcElement) {
+    // Re-mount cleanly if mic permission changes, on initial mount, or when switching stream URLs (wide <-> zoom)
+    if (forceRemount || !this._webrtcElement || JSON.stringify(this._webrtcConfig) !== JSON.stringify(newConfig)) {
+        const oldElem = this._webrtcElement;
+        if (oldElem) {
+            try {
+                if (typeof oldElem.ondisconnect === 'function') {
+                    oldElem.ondisconnect();
+                }
+            } catch (e) {
+                console.warn("[Camera Card] Error disconnecting previous WebRTC stream:", e);
+            }
+        }
+
         this._webrtcConfig = newConfig;
         this._cachedVideo = null;
         
-        this._webrtcElement = document.createElement("webrtc-camera");
-        this._webrtcElement.className = "full-stream webrtc-stream compact-stream";
-        this._webrtcElement.style.width = "100%";
-        this._webrtcElement.style.height = "100%";
+        const newElem = document.createElement("webrtc-camera");
+        newElem.className = "full-stream webrtc-stream compact-stream";
+        newElem.style.width = "100%";
+        newElem.style.height = "100%";
+        this._webrtcElement = newElem;
 
-        if (this._webrtcElement.setConfig) {
-            this._webrtcElement.setConfig(newConfig);
-            this._webrtcElement.hass = this.hass;
-            wrapper.innerHTML = '';
-            wrapper.appendChild(this._webrtcElement);
-        } else {
-            customElements.whenDefined("webrtc-camera").then(() => {
-                this._webrtcElement.setConfig(newConfig);
-                this._webrtcElement.hass = this.hass;
-                wrapper.innerHTML = '';
-                wrapper.appendChild(this._webrtcElement);
-            });
-        }
-    } else if (JSON.stringify(this._webrtcConfig) !== JSON.stringify(newConfig)) {
-        // Stream URL or settings changed without mic permission change: update in-place without destroying DOM
-        this._webrtcConfig = newConfig;
-        this._cachedVideo = null;
-        if (this._webrtcElement.setConfig) {
-            this._webrtcElement.setConfig(newConfig);
-        }
-        if (!wrapper.contains(this._webrtcElement)) {
-            wrapper.innerHTML = '';
-            wrapper.appendChild(this._webrtcElement);
-        }
+        const mount = () => {
+            newElem.setConfig(newConfig);
+            newElem.hass = this.hass;
+            wrapper.replaceChildren(newElem);
+
+            const attachVideoListener = () => {
+                const video = newElem.video || (newElem.shadowRoot ? newElem.shadowRoot.querySelector("video") : null);
+                if (video) {
+                    this._cachedVideo = video;
+                    const onPlaying = () => {
+                        if (this._switchLensTimer) {
+                            clearTimeout(this._switchLensTimer);
+                            this._switchLensTimer = null;
+                        }
+                        this._switchingLens = false;
+                        this._forceUnmute();
+                        video.removeEventListener("playing", onPlaying);
+                    };
+                    if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2) {
+                        onPlaying();
+                    } else {
+                        video.addEventListener("playing", onPlaying, { once: true });
+                    }
+                }
+            };
+
+            attachVideoListener();
+            setTimeout(attachVideoListener, 100);
+            setTimeout(attachVideoListener, 400);
+            setTimeout(attachVideoListener, 1000);
+        };
+
         if (customElements.get("webrtc-camera")) {
-            this._webrtcElement.hass = this.hass;
+            mount();
+        } else {
+            customElements.whenDefined("webrtc-camera").then(mount);
         }
-        // Once the new stream starts playing, dismiss the switching indicator
-        setTimeout(() => {
-            const video = this._cachedVideo || (this._webrtcElement ? this._webrtcElement.shadowRoot?.querySelector("video") : null);
-            if (video) {
-                const onPlay = () => {
-                    this._switchingLens = false;
-                    video.removeEventListener("playing", onPlay);
-                };
-                video.addEventListener("playing", onPlay, { once: true });
-            }
-        }, 200);
     } else {
         if (!wrapper.contains(this._webrtcElement)) {
-            wrapper.innerHTML = '';
-            wrapper.appendChild(this._webrtcElement);
+            wrapper.replaceChildren(this._webrtcElement);
         }
         if (customElements.get("webrtc-camera")) {
             this._webrtcElement.hass = this.hass;
