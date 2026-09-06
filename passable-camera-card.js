@@ -5,7 +5,7 @@ import {
   svg,
 } from "https://unpkg.com/lit@3.0.0/index.js?module";
 
-const CARD_VERSION = "1.0.2";
+const CARD_VERSION = "1.0.3";
 
 console.info(
   `%c  PASSABLE-CAMERA-CARD  %c v${CARD_VERSION} `,
@@ -59,6 +59,7 @@ class CameraDashboardCard extends LitElement {
     _entities: { state: true },
     _sheetOpen: { state: true },
     _activeLens: { state: true },
+    _switchingLens: { state: true },
     _toastMsg: { state: true },
     _events: { state: true },
     _selectedEvent: { state: true },
@@ -88,6 +89,7 @@ class CameraDashboardCard extends LitElement {
     this._entities = null;
     this._sheetOpen = false;
     this._activeLens = "wide";
+    this._switchingLens = false;
     this._startY = 0;
     this._dragging = false;
     this._toastMsg = null;
@@ -101,6 +103,10 @@ class CameraDashboardCard extends LitElement {
     
     this._webrtcElement = null;
     this._webrtcConfig = null;
+    this._cachedVideo = null;
+    this._capturedPointerId = undefined;
+    this._capturedTarget = null;
+    this._switchLensTimer = null;
     
     const now = new Date();
     this._selectedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -118,6 +124,7 @@ class CameraDashboardCard extends LitElement {
     this._loadedVodStart = null;
     this._loadedVodEnd = null;
     this._fetchTimeout = null;
+    this._seekClearTimeout = null;
     this._fsTimer = null;
 
     this._programmaticScroll = false;
@@ -128,6 +135,7 @@ class CameraDashboardCard extends LitElement {
     this._seekClearTimeout = null;
     this._wheelTimeout = null;
 
+    this._mql = window.matchMedia("(orientation: landscape)");
     this._handleOrientationChange = this._handleOrientationChange.bind(this);
     this._handleFullscreenChange = this._handleFullscreenChange.bind(this);
     this._wakeFullscreenControls = this._wakeFullscreenControls.bind(this);
@@ -135,8 +143,9 @@ class CameraDashboardCard extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this._mql = window.matchMedia("(orientation: landscape)");
-    this._mql.addEventListener("change", this._handleOrientationChange);
+    if (this._mql) {
+        this._mql.addEventListener("change", this._handleOrientationChange);
+    }
     document.addEventListener("fullscreenchange", this._handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", this._handleFullscreenChange);
   }
@@ -150,6 +159,7 @@ class CameraDashboardCard extends LitElement {
     if (this._fetchTimeout) clearTimeout(this._fetchTimeout);
     if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
     if (this._fsTimer) clearTimeout(this._fsTimer);
+    if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
     if (this._mql) {
         this._mql.removeEventListener("change", this._handleOrientationChange);
     }
@@ -182,24 +192,27 @@ class CameraDashboardCard extends LitElement {
   _forceUnmute() {
     if (!this._webrtcElement) return;
 
-    // Recursively drill through Shadow DOMs to find the hidden video element
-    const findVideo = (root) => {
-      if (!root) return null;
-      if (root.tagName === 'VIDEO') return root;
-      if (root.shadowRoot) {
-        const res = findVideo(root.shadowRoot);
-        if (res) return res;
-      }
-      if (root.children) {
-        for (let i = 0; i < root.children.length; i++) {
-          const res = findVideo(root.children[i]);
+    if (!this._cachedVideo || !this._cachedVideo.isConnected) {
+      // Recursively drill through Shadow DOMs to find the hidden video element
+      const findVideo = (root) => {
+        if (!root) return null;
+        if (root.tagName === 'VIDEO') return root;
+        if (root.shadowRoot) {
+          const res = findVideo(root.shadowRoot);
           if (res) return res;
         }
-      }
-      return null;
-    };
+        if (root.children) {
+          for (let i = 0; i < root.children.length; i++) {
+            const res = findVideo(root.children[i]);
+            if (res) return res;
+          }
+        }
+        return null;
+      };
+      this._cachedVideo = findVideo(this._webrtcElement);
+    }
 
-    const video = findVideo(this._webrtcElement);
+    const video = this._cachedVideo;
     if (video && video.muted) {
         video.muted = false;
         if (video.paused) {
@@ -401,6 +414,16 @@ class CameraDashboardCard extends LitElement {
     return activeEntity && this.hass.states[activeEntity] ? this.hass.states[activeEntity] : null;
   }
 
+  _toggleLens() {
+    if (this._switchingLens) return;
+    this._switchingLens = true;
+    this._activeLens = this._activeLens === "wide" ? "zoom" : "wide";
+    if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
+    this._switchLensTimer = setTimeout(() => {
+      this._switchingLens = false;
+    }, 2000);
+  }
+
   // --- PROGRAMMATIC WEBRTC CARD INITIALIZER ---
   _initWebrtc(camState, wrapper, forceRemount = false) {
     let baseName = camState.entity_id.split(".")[1] || "";
@@ -425,9 +448,10 @@ class CameraDashboardCard extends LitElement {
         muted: true
     };
 
-    // Re-mount the DOM element entirely if the mic toggles to prompt for permissions
-    if (forceRemount || !this._webrtcElement || JSON.stringify(this._webrtcConfig) !== JSON.stringify(newConfig)) {
+    // Re-mount the DOM element entirely if the mic toggles (requires audio permissions) or on first mount
+    if (forceRemount || !this._webrtcElement) {
         this._webrtcConfig = newConfig;
+        this._cachedVideo = null;
         
         this._webrtcElement = document.createElement("webrtc-camera");
         this._webrtcElement.className = "full-stream webrtc-stream compact-stream";
@@ -447,6 +471,31 @@ class CameraDashboardCard extends LitElement {
                 wrapper.appendChild(this._webrtcElement);
             });
         }
+    } else if (JSON.stringify(this._webrtcConfig) !== JSON.stringify(newConfig)) {
+        // Stream URL or settings changed without mic permission change: update in-place without destroying DOM
+        this._webrtcConfig = newConfig;
+        this._cachedVideo = null;
+        if (this._webrtcElement.setConfig) {
+            this._webrtcElement.setConfig(newConfig);
+        }
+        if (!wrapper.contains(this._webrtcElement)) {
+            wrapper.innerHTML = '';
+            wrapper.appendChild(this._webrtcElement);
+        }
+        if (customElements.get("webrtc-camera")) {
+            this._webrtcElement.hass = this.hass;
+        }
+        // Once the new stream starts playing, dismiss the switching indicator
+        setTimeout(() => {
+            const video = this._cachedVideo || (this._webrtcElement ? this._webrtcElement.shadowRoot?.querySelector("video") : null);
+            if (video) {
+                const onPlay = () => {
+                    this._switchingLens = false;
+                    video.removeEventListener("playing", onPlay);
+                };
+                video.addEventListener("playing", onPlay, { once: true });
+            }
+        }, 200);
     } else {
         if (!wrapper.contains(this._webrtcElement)) {
             wrapper.innerHTML = '';
@@ -489,17 +538,47 @@ class CameraDashboardCard extends LitElement {
   }
 
   _startPtz(e, entity_id) {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.currentTarget && e.currentTarget.setPointerCapture && e.pointerId !== undefined) {
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          this._capturedPointerId = e.pointerId;
+          this._capturedTarget = e.currentTarget;
+        } catch (err) {}
+      }
+    }
     this._ptzActive = true;
     this._wakeFullscreenControls();
     this._trigger(entity_id);
   }
 
   _stopPtz(e) {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.currentTarget && e.currentTarget.releasePointerCapture && e.pointerId !== undefined) {
+        try {
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }
+        } catch (err) {}
+      }
+    }
+    if (this._capturedTarget && this._capturedPointerId !== undefined) {
+      try {
+        if (this._capturedTarget.hasPointerCapture(this._capturedPointerId)) {
+          this._capturedTarget.releasePointerCapture(this._capturedPointerId);
+        }
+      } catch (err) {}
+      this._capturedPointerId = undefined;
+      this._capturedTarget = null;
+    }
+    if (!this._ptzActive) return;
     this._ptzActive = false;
     this._wakeFullscreenControls();
-    if (this._entities.ptz_stop) {
+    if (this._entities && this._entities.ptz_stop) {
       this._trigger(this._entities.ptz_stop);
     }
   }
@@ -766,7 +845,7 @@ class CameraDashboardCard extends LitElement {
             </div>
             ${hasTelephoto
               ? html`
-                  <button class="lens-toggle" @click=${(e) => { e.stopPropagation(); this._activeLens = this._activeLens === "wide" ? "zoom" : "wide"; }}>
+                  <button class="lens-toggle ${this._switchingLens ? 'disabled' : ''}" ?disabled=${this._switchingLens} @click=${(e) => { e.stopPropagation(); this._toggleLens(); }}>
                     <ha-icon icon="${this._activeLens === "wide" ? "mdi:magnify-plus-outline" : "mdi:magnify-minus-outline"}" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
                     ${this._activeLens === "wide" ? "Wide" : "Zoom"}
                   </button>
@@ -871,11 +950,18 @@ class CameraDashboardCard extends LitElement {
 
     return html`
       <div class="camera-box ${this._pseudoFullscreen ? 'pseudo-fullscreen' : ''}" 
-           @mousemove=${(e) => { this._wakeFullscreenControls(e); this._forceUnmute(); }} 
-           @touchstart=${(e) => { this._wakeFullscreenControls(e); this._forceUnmute(); }} 
+           @mousemove=${(e) => { this._wakeFullscreenControls(e); }} 
+           @touchstart=${(e) => { this._wakeFullscreenControls(e); }} 
            @click=${(e) => { this._wakeFullscreenControls(e); this._forceUnmute(); }}>
            
         ${camState ? html`<div id="webrtc-wrapper-live" style="width:100%;height:100%;"></div>` : html`<div style="color: var(--secondary-text-color)">No Feed Available</div>`}
+        
+        ${this._switchingLens ? html`
+          <div class="stream-switching-overlay">
+            <ha-circular-progress active size="small"></ha-circular-progress>
+            <span>Connecting ${this._activeLens === 'zoom' ? 'Zoom' : 'Wide'} Lens...</span>
+          </div>
+        ` : ''}
         
         ${camState ? html`
             <button
@@ -893,10 +979,11 @@ class CameraDashboardCard extends LitElement {
         ${hasTelephoto
           ? html`
               <button
-                class="lens-toggle fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}"
+                class="lens-toggle fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'} ${this._switchingLens ? 'disabled' : ''}"
+                ?disabled=${this._switchingLens}
                 @click=${(e) => {
                   e.stopPropagation();
-                  this._activeLens = this._activeLens === "wide" ? "zoom" : "wide";
+                  this._toggleLens();
                 }}
               >
                 <ha-icon icon="${this._activeLens === "wide" ? "mdi:magnify-plus-outline" : "mdi:magnify-minus-outline"}" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
@@ -909,10 +996,10 @@ class CameraDashboardCard extends LitElement {
             <div class="landscape-ptz-overlay fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}">
               ${showPTZ ? html`
                 <div class="fs-dpad-container">
-                  <button class="fs-dpad-btn fs-dpad-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
-                  <button class="fs-dpad-btn fs-dpad-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
-                  <button class="fs-dpad-btn fs-dpad-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
-                  <button class="fs-dpad-btn fs-dpad-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
+                  <button class="fs-dpad-btn fs-dpad-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
+                  <button class="fs-dpad-btn fs-dpad-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
+                  <button class="fs-dpad-btn fs-dpad-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
+                  <button class="fs-dpad-btn fs-dpad-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
                 </div>
               ` : ''}
               
@@ -970,10 +1057,10 @@ class CameraDashboardCard extends LitElement {
               ${showPTZ
                 ? html`
                     <div class="dpad-container">
-                      <button class="dpad-btn dpad-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
-                      <button class="dpad-btn dpad-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
-                      <button class="dpad-btn dpad-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
-                      <button class="dpad-btn dpad-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointerleave=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
+                      <button class="dpad-btn dpad-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
+                      <button class="dpad-btn dpad-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
+                      <button class="dpad-btn dpad-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
+                      <button class="dpad-btn dpad-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
                     </div>
                   `
                 : ""}
@@ -1754,6 +1841,7 @@ class CameraDashboardCard extends LitElement {
         gap: 20px;
         align-items: center;
         pointer-events: auto; /* Ensures it works over the video */
+        touch-action: none;
       }
       .camera-box:fullscreen .landscape-ptz-overlay,
       .camera-box:-webkit-full-screen .landscape-ptz-overlay,
@@ -1766,10 +1854,11 @@ class CameraDashboardCard extends LitElement {
         grid-template-columns: 54px 54px 54px;
         grid-template-rows: 54px 54px 54px;
         gap: 6px;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(18, 18, 18, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 50%;
         padding: 12px;
-        backdrop-filter: blur(4px);
+        touch-action: none;
       }
       .fs-dpad-btn {
         width: 54px;
@@ -1796,7 +1885,7 @@ class CameraDashboardCard extends LitElement {
       .fs-dpad-down { grid-column: 2; grid-row: 3; }
 
       .fs-zoom-panel {
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(18, 18, 18, 0.85);
         border-radius: 24px;
         padding: 16px 12px;
         height: 180px;
@@ -1804,9 +1893,9 @@ class CameraDashboardCard extends LitElement {
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        backdrop-filter: blur(4px);
         color: white;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        touch-action: none;
       }
       .fs-zoom-panel input[type="range"] {
         -webkit-appearance: slider-vertical;
@@ -1815,6 +1904,29 @@ class CameraDashboardCard extends LitElement {
         border-radius: 4px;
         outline: none;
         accent-color: var(--primary-color, #2563eb);
+      }
+
+      /* STREAM SWITCHING OVERLAY */
+      .stream-switching-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 4;
+        pointer-events: none;
+        animation: fadeIn 0.15s ease;
+      }
+      .lens-toggle.disabled, .lens-toggle[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
       }
 
       /* TOAST NOTIFICATION */
