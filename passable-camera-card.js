@@ -2713,7 +2713,7 @@ class CameraDashboardCard extends LitElement {
       .card-panel {
         background: var(--ha-card-background, #fff);
         border: 1px solid var(--divider-color, #e2e8f0);
-        border-radius: var(--ha-card-border-radius, 16px);
+        border-radius: var(--ha-card-border-radius, 12px);
         padding: 16px;
         flex-shrink: 0;
       }
