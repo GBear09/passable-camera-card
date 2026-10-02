@@ -1,16 +1,22 @@
-import {
-  LitElement,
-  html,
-  css,
-  svg,
-} from "https://unpkg.com/lit@3.0.0/index.js?module";
+const CARD_VERSION = "1.0.5";
 
-const CARD_VERSION = "1.0.4";
+const LitElement = Object.getPrototypeOf(
+  customElements.get("hui-entities-card")
+);
+const html = LitElement.prototype.html;
+const css = LitElement.prototype.css;
+const svg = LitElement.prototype.svg || ((strings, ...values) => {
+  const result = html(strings, ...values);
+  if (result && typeof result === "object") {
+    return Object.assign({}, result, { _$litType$: 2, type: "svg" });
+  }
+  return result;
+});
 
 console.info(
-  `%c  PASSABLE-CAMERA-CARD  %c v${CARD_VERSION} `,
-  "color: white; font-weight: bold; background: #3498db; padding: 2px 5px; border-radius: 3px 0 0 3px;",
-  "color: #3498db; font-weight: bold; background: #ecf0f1; padding: 2px 5px; border-radius: 0 3px 3px 0;"
+  `%c PASSABLE-CAMERA-CARD %c v${CARD_VERSION} IS LOADED `,
+  "color: white; background: #0284c7; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;",
+  "color: #0284c7; background: #e0f2fe; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;"
 );
 
 
@@ -80,6 +86,10 @@ class CameraDashboardCard extends LitElement {
     _loadedVodStart: { state: true },
     _loadedVodEnd: { state: true },
   };
+
+  static getConfigElement() {
+    return document.createElement("passable-camera-card-editor");
+  }
 
   constructor() {
     super();
@@ -2153,7 +2163,7 @@ class CameraDashboardCard extends LitElement {
 
       /* --- ORIGINAL UI STYLES --- */
       .header {
-        padding: 12px 20px 0;
+        padding: 16px 16px 0;
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
@@ -2167,7 +2177,7 @@ class CameraDashboardCard extends LitElement {
         flex-direction: column;
       }
       .title {
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 500;
         margin: 0;
         letter-spacing: -0.01em;
@@ -2176,9 +2186,9 @@ class CameraDashboardCard extends LitElement {
       }
       .subtitle {
         color: var(--secondary-text-color, #757575);
-        font-size: 13px;
+        font-size: 14px;
+        margin: 0;
         margin-top: 4px;
-        margin-bottom: 0;
       }
 
       .status-chip {
@@ -2952,5 +2962,6 @@ window.customCards.push({
   type: "passable-camera-card",
   name: "Passable Camera Card",
   preview: true,
+  documentationURL: "https://github.com/GBear09/passable-camera-card",
   description: "A comprehensive LitElement dashboard card for cameras featuring live stream, WebRTC, PTZ controls, Frigate event history, and timeline playback.",
 });
