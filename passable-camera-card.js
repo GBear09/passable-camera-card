@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.5";
+const CARD_VERSION = "1.0.6";
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("hui-entities-card")
@@ -235,7 +235,7 @@ class CameraDashboardCard extends LitElement {
     }
 
     const video = this._cachedVideo;
-    if (video && video.muted) {
+    if (video && this._micEnabled) { video.muted = true; } else if (video && video.muted) {
         video.muted = false;
         if (video.paused) {
             video.play().catch((e) => {
@@ -814,7 +814,7 @@ class CameraDashboardCard extends LitElement {
               adaptive: true,
               content: {
                 ...this.config,
-                type: "custom:camera-card",
+                type: "custom:passable-camera-card",
                 is_popup: true
               }
             }
