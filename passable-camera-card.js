@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.6";
+const CARD_VERSION = "1.0.7";
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("hui-entities-card")
@@ -182,6 +182,10 @@ class CameraDashboardCard extends LitElement {
     if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
     if (this._fsTimer) clearTimeout(this._fsTimer);
     if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
+    if (this._scrollTimeout) clearTimeout(this._scrollTimeout);
+    if (this._progScrollTimeout) clearTimeout(this._progScrollTimeout);
+    if (this._wheelTimeout) clearTimeout(this._wheelTimeout);
+    if (this._unmuteTimer) clearTimeout(this._unmuteTimer);
     if (this._mql) {
         this._mql.removeEventListener("change", this._handleOrientationChange);
     }
@@ -291,7 +295,7 @@ class CameraDashboardCard extends LitElement {
 
   updated(changedProps) {
     super.updated(changedProps);
-    if ((changedProps.has("hass") || changedProps.has("config")) && this.hass && this.config && this.config.camera_entity) {
+    if ((changedProps.has("config") || (!this._entities && changedProps.has("hass"))) && this.hass && this.config && this.config.camera_entity) {
       this._discoverEntities();
     }
     
@@ -303,7 +307,7 @@ class CameraDashboardCard extends LitElement {
         const wrapper = this.shadowRoot.getElementById("webrtc-wrapper-live");
         if (wrapper) {
             this._initWebrtc(camState, wrapper, forceRemount);
-            setTimeout(() => this._forceUnmute(), 500); // Attempt to auto-unmute once mounted
+            if (this._unmuteTimer) clearTimeout(this._unmuteTimer); this._unmuteTimer = setTimeout(() => this._forceUnmute(), 500); // Attempt to auto-unmute once mounted
         }
     } else if (this.config.is_popup && this._activeTab !== "live" && this._webrtcElement) {
         try {
@@ -794,7 +798,7 @@ class CameraDashboardCard extends LitElement {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (AudioContext) {
-          const ctx = new AudioContext();
+          const ctx = CameraDashboardCard._sharedAudioCtx || (CameraDashboardCard._sharedAudioCtx = new AudioContext());
           ctx.resume();
       }
     } catch (e) {
