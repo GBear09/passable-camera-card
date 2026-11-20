@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.0.7";
+const CARD_VERSION = "1.1.0";
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("hui-entities-card")
@@ -45,6 +45,13 @@ const Icons = {
   Pause: html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`,
   Mic: html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`,
   MicOff: html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>`,
+  Volume2: html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
+  VolumeX: html`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`,
+  Maximize: html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>`,
+  Minimize: html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"></path><path d="M21 8h-3a2 2 0 0 1-2-2V3"></path><path d="M3 16h3a2 2 0 0 1 2 2v3"></path><path d="M16 21v-3a2 2 0 0 1 2-2h3"></path></svg>`,
+  RefreshCw: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`,
+  Download: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`,
+  ExternalLink: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
 };
 
 function formatSettingName(val) {
@@ -63,21 +70,26 @@ class CameraDashboardCard extends LitElement {
     _activePopup: { state: true },
     _sliderVals: { state: true },
     _entities: { state: true },
-    _sheetOpen: { state: true },
     _activeLens: { state: true },
     _switchingLens: { state: true },
+    _streamQuality: { state: true },
     _toastMsg: { state: true },
     _events: { state: true },
     _selectedEvent: { state: true },
     _selectedDate: { state: true },
     _btnStates: { state: true },
     _micEnabled: { state: true },
+    _isMuted: { state: true },
     _fsControlsVisible: { state: true },
     _isFullscreen: { state: true },
     _pseudoFullscreen: { state: true },
     _ptzActive: { state: true },
-    
-    _historyMode: { state: true }, 
+
+    _historyMode: { state: true },
+    _eventFilter: { state: true },
+    _zoneOnlyFilter: { state: true },
+    _loadingVod: { state: true },
+    _eventDownloadUrl: { state: true },
     _videoDuration: { state: true },
     _videoCurrentTime: { state: true },
     _isPlaying: { state: true },
@@ -97,53 +109,71 @@ class CameraDashboardCard extends LitElement {
     this._activePopup = null;
     this._sliderVals = {};
     this._entities = null;
-    this._sheetOpen = false;
     this._activeLens = "wide";
     this._switchingLens = false;
-    this._startY = 0;
-    this._dragging = false;
+    this._streamQuality = "sub";
     this._toastMsg = null;
     this._events = null;
     this._selectedEvent = null;
     this._micEnabled = false;
+    this._isMuted = false;
     this._fsControlsVisible = true;
     this._isFullscreen = false;
     this._pseudoFullscreen = false;
     this._ptzActive = false;
-    
+
     this._webrtcElement = null;
     this._webrtcConfig = null;
     this._cachedVideo = null;
     this._capturedPointerId = undefined;
     this._capturedTarget = null;
-    this._switchLensTimer = null;
-    
+
     const now = new Date();
     this._selectedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    
+
     this._btnStates = {};
     this._fetchingEvents = false;
-    
+    this._lastEventsFetch = 0;
+
     this._historyMode = "events";
+    this._eventFilter = "all";
+    this._zoneOnlyFilter = false;
+    this._loadingVod = false;
+    this._eventDownloadUrl = null;
     this._videoDuration = 0;
     this._videoCurrentTime = 0;
     this._isPlaying = false;
     this._timelineCursorTime = null;
     this._pendingSeek = null;
+
     this._hls = null;
+    this._eventHls = null;
+    this._hlsPromise = null;
+    this._vodAbortController = null;
+    this._eventAbortController = null;
+    this._currentEventVideoId = null;
+    this._eventVideoAbort = 0;
+    this._timelineVideoAbort = 0;
     this._loadedVodStart = null;
     this._loadedVodEnd = null;
+
+    this._toastTimer = null;
+    this._safeActionTimers = {};
+    this._attachVideoTimers = [];
+    this._sliderClearTimers = {};
     this._fetchTimeout = null;
     this._seekClearTimeout = null;
     this._fsTimer = null;
+    this._switchLensTimer = null;
+    this._scrollTimeout = null;
+    this._progScrollTimeout = null;
+    this._wheelTimeout = null;
+    this._unmuteTimer = null;
 
     this._programmaticScroll = false;
     this._isPointerDown = false;
     this._isUserScrolling = false;
-    this._isSeeking = false; 
-    this._scrollTimeout = null;
-    this._seekClearTimeout = null;
-    this._wheelTimeout = null;
+    this._isSeeking = false;
 
     this._mql = window.matchMedia("(orientation: landscape)");
     this._handleOrientationChange = this._handleOrientationChange.bind(this);
@@ -154,7 +184,7 @@ class CameraDashboardCard extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     if (this._mql) {
-        this._mql.addEventListener("change", this._handleOrientationChange);
+      this._mql.addEventListener("change", this._handleOrientationChange);
     }
     document.addEventListener("fullscreenchange", this._handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", this._handleFullscreenChange);
@@ -162,6 +192,46 @@ class CameraDashboardCard extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this._disconnectWebrtc();
+    this._destroyTimelineHls();
+    this._destroyEventHls();
+
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    Object.values(this._safeActionTimers).forEach((t) => clearTimeout(t));
+    this._safeActionTimers = {};
+    this._clearAttachVideoTimers();
+    Object.values(this._sliderClearTimers).forEach((t) => clearTimeout(t));
+    this._sliderClearTimers = {};
+
+    if (this._fetchTimeout) clearTimeout(this._fetchTimeout);
+    if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
+    if (this._fsTimer) clearTimeout(this._fsTimer);
+    if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
+    if (this._scrollTimeout) clearTimeout(this._scrollTimeout);
+    if (this._progScrollTimeout) clearTimeout(this._progScrollTimeout);
+    if (this._wheelTimeout) clearTimeout(this._wheelTimeout);
+    if (this._unmuteTimer) clearTimeout(this._unmuteTimer);
+
+    if (this._mql) {
+      this._mql.removeEventListener("change", this._handleOrientationChange);
+    }
+    document.removeEventListener("fullscreenchange", this._handleFullscreenChange);
+    document.removeEventListener("webkitfullscreenchange", this._handleFullscreenChange);
+  }
+
+  _clearAttachVideoTimers() {
+    if (this._attachVideoTimers.length) {
+      this._attachVideoTimers.forEach((t) => clearTimeout(t));
+      this._attachVideoTimers = [];
+    }
+  }
+
+  _disconnectWebrtc() {
+    this._clearAttachVideoTimers();
+    if (this._unmuteTimer) {
+      clearTimeout(this._unmuteTimer);
+      this._unmuteTimer = null;
+    }
     if (this._webrtcElement) {
       try {
         if (typeof this._webrtcElement.ondisconnect === "function") {
@@ -174,23 +244,29 @@ class CameraDashboardCard extends LitElement {
       this._webrtcConfig = null;
       this._cachedVideo = null;
     }
+  }
+
+  _destroyTimelineHls() {
+    if (this._vodAbortController) {
+      this._vodAbortController.abort();
+      this._vodAbortController = null;
+    }
     if (this._hls) {
-        this._hls.destroy();
-        this._hls = null;
+      this._hls.destroy();
+      this._hls = null;
     }
-    if (this._fetchTimeout) clearTimeout(this._fetchTimeout);
-    if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
-    if (this._fsTimer) clearTimeout(this._fsTimer);
-    if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
-    if (this._scrollTimeout) clearTimeout(this._scrollTimeout);
-    if (this._progScrollTimeout) clearTimeout(this._progScrollTimeout);
-    if (this._wheelTimeout) clearTimeout(this._wheelTimeout);
-    if (this._unmuteTimer) clearTimeout(this._unmuteTimer);
-    if (this._mql) {
-        this._mql.removeEventListener("change", this._handleOrientationChange);
+  }
+
+  _destroyEventHls() {
+    if (this._eventAbortController) {
+      this._eventAbortController.abort();
+      this._eventAbortController = null;
     }
-    document.removeEventListener("fullscreenchange", this._handleFullscreenChange);
-    document.removeEventListener("webkitfullscreenchange", this._handleFullscreenChange);
+    if (this._eventHls) {
+      this._eventHls.destroy();
+      this._eventHls = null;
+    }
+    this._currentEventVideoId = null;
   }
 
   _handleFullscreenChange() {
@@ -205,24 +281,22 @@ class CameraDashboardCard extends LitElement {
     if (!this._fsControlsVisible) {
       this._fsControlsVisible = true;
     }
-    
+
     if (this._fsTimer) clearTimeout(this._fsTimer);
-    
+
     if (!this._ptzActive) {
       this._fsTimer = setTimeout(() => {
         this._fsControlsVisible = false;
-      }, 3000); 
+      }, 3000);
     }
   }
 
-  _forceUnmute() {
-    if (!this._webrtcElement) return;
-
+  _findVideoElement() {
+    if (!this._webrtcElement) return null;
     if (!this._cachedVideo || !this._cachedVideo.isConnected) {
-      // Recursively drill through Shadow DOMs to find the hidden video element
       const findVideo = (root) => {
         if (!root) return null;
-        if (root.tagName === 'VIDEO') return root;
+        if (root.tagName === "VIDEO") return root;
         if (root.shadowRoot) {
           const res = findVideo(root.shadowRoot);
           if (res) return res;
@@ -237,26 +311,110 @@ class CameraDashboardCard extends LitElement {
       };
       this._cachedVideo = findVideo(this._webrtcElement);
     }
+    return this._cachedVideo;
+  }
 
-    const video = this._cachedVideo;
-    if (video && this._micEnabled) { video.muted = true; } else if (video && video.muted) {
-        video.muted = false;
-        if (video.paused) {
-            video.play().catch((e) => {
-                console.warn("[Camera Card] Browser blocked unmuted autoplay, falling back to muted", e);
-                video.muted = true;
-                video.play();
-            });
-        }
+  _forceUnmute() {
+    const video = this._findVideoElement();
+    if (!video) return;
+    if (this._micEnabled || this._isMuted) {
+      video.muted = true;
+      return;
+    }
+    if (video.muted) {
+      video.muted = false;
+      if (video.paused) {
+        video.play().catch((e) => {
+          console.warn("[Camera Card] Browser blocked unmuted autoplay, falling back to muted", e);
+          this._isMuted = true;
+          video.muted = true;
+          video.play().catch(() => {});
+        });
+      }
+    }
+  }
+
+  _toggleMute(e) {
+    if (e) e.stopPropagation();
+    if (this._micEnabled) {
+      this._showToast("Speaker stays muted while microphone is active");
+      return;
+    }
+    this._isMuted = !this._isMuted;
+    const video = this._findVideoElement();
+    if (video) {
+      video.muted = this._isMuted;
+      if (!this._isMuted && video.paused) {
+        video.play().catch(() => {
+          this._isMuted = true;
+          video.muted = true;
+        });
+      }
+    }
+  }
+
+  _toggleMic(e) {
+    if (e) e.stopPropagation();
+    if (!this._micEnabled) {
+      if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this._showToast("Two-way audio requires HTTPS (use Nabu Casa or HTTPS URL)");
+        return;
+      }
+      let switchedStream = false;
+      if (this._activeLens === "zoom" || this._streamQuality === "main") {
+        this._activeLens = "wide";
+        this._streamQuality = "sub";
+        switchedStream = true;
+      }
+      this._micEnabled = true;
+      this._showToast(
+        switchedStream
+          ? "Switched to Wide stream for Two-Way Audio"
+          : "Two-Way Audio Active (Speaker Muted)"
+      );
+    } else {
+      this._micEnabled = false;
+      this._showToast("Two-Way Audio Stopped");
+    }
+  }
+
+  async _toggleFullscreen(e) {
+    if (e) e.stopPropagation();
+    const target =
+      this._activeTab === "live"
+        ? this.shadowRoot?.querySelector(".camera-box")
+        : this.shadowRoot?.querySelector(".history-player");
+    if (!target) return;
+
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fsEl || this._pseudoFullscreen) {
+      this._pseudoFullscreen = false;
+      try {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      } catch (err) {
+        console.warn("Could not exit fullscreen:", err);
+      }
+    } else {
+      try {
+        if (target.requestFullscreen) await target.requestFullscreen();
+        else if (target.webkitRequestFullscreen) await target.webkitRequestFullscreen();
+        else if (target.webkitEnterFullscreen) target.webkitEnterFullscreen();
+        else this._pseudoFullscreen = true;
+      } catch (err) {
+        this._pseudoFullscreen = true;
+      }
+      this._wakeFullscreenControls();
     }
   }
 
   async _handleOrientationChange(e) {
     if (!this.config.is_popup) return;
-    
-    let target = this._activeTab === "live" 
-      ? this.shadowRoot.querySelector(".camera-box")
-      : this.shadowRoot.querySelector(".history-player");
+
+    const target =
+      this._activeTab === "live"
+        ? this.shadowRoot?.querySelector(".camera-box")
+        : this.shadowRoot?.querySelector(".history-player");
 
     if (e.matches) {
       if (target && !this._isFullscreen) {
@@ -264,9 +422,9 @@ class CameraDashboardCard extends LitElement {
           if (target.requestFullscreen) await target.requestFullscreen();
           else if (target.webkitRequestFullscreen) await target.webkitRequestFullscreen();
           else if (target.webkitEnterFullscreen) target.webkitEnterFullscreen();
-        } catch (err) { 
+        } catch (err) {
           console.warn("Native fullscreen blocked by browser rules, applying CSS fallback", err);
-          this._pseudoFullscreen = true; 
+          this._pseudoFullscreen = true;
         }
         this._wakeFullscreenControls();
       }
@@ -277,9 +435,11 @@ class CameraDashboardCard extends LitElement {
           if (document.exitFullscreen) await document.exitFullscreen();
           else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
         } else if (target && target.webkitExitFullscreen) {
-           target.webkitExitFullscreen();
+          target.webkitExitFullscreen();
         }
-      } catch (err) { console.warn("Could not exit fullscreen:", err); }
+      } catch (err) {
+        console.warn("Could not exit fullscreen:", err);
+      }
     }
   }
 
@@ -298,43 +458,80 @@ class CameraDashboardCard extends LitElement {
     if ((changedProps.has("config") || (!this._entities && changedProps.has("hass"))) && this.hass && this.config && this.config.camera_entity) {
       this._discoverEntities();
     }
-    
+
     const camState = this._getActiveCameraState();
-    const forceRemount = changedProps.has("_micEnabled");
-    
-    // Only initialize and mount WebRTC when the live tab is open in the modal
+    const enteringLive = changedProps.has("_activeTab") && this._activeTab === "live";
+
     if (camState && this.config.is_popup && this._activeTab === "live") {
-        const wrapper = this.shadowRoot.getElementById("webrtc-wrapper-live");
-        if (wrapper) {
-            this._initWebrtc(camState, wrapper, forceRemount);
-            if (this._unmuteTimer) clearTimeout(this._unmuteTimer); this._unmuteTimer = setTimeout(() => this._forceUnmute(), 500); // Attempt to auto-unmute once mounted
+      const needsWebrtcInit =
+        !this._webrtcElement ||
+        enteringLive ||
+        changedProps.has("_activeLens") ||
+        changedProps.has("_streamQuality") ||
+        changedProps.has("_micEnabled") ||
+        changedProps.has("config");
+
+      const wrapper = this.shadowRoot?.getElementById("webrtc-wrapper-live");
+      if (needsWebrtcInit && wrapper) {
+        this._initWebrtc(camState, wrapper, changedProps.has("_micEnabled"));
+        if (this._unmuteTimer) clearTimeout(this._unmuteTimer);
+        this._unmuteTimer = setTimeout(() => this._forceUnmute(), 500);
+      } else if (this._webrtcElement) {
+        if (wrapper && !wrapper.contains(this._webrtcElement)) {
+          wrapper.replaceChildren(this._webrtcElement);
         }
-    } else if (this.config.is_popup && this._activeTab !== "live" && this._webrtcElement) {
-        try {
-            if (typeof this._webrtcElement.ondisconnect === "function") {
-                this._webrtcElement.ondisconnect();
-            }
-        } catch (e) {
-            console.warn("[Camera Card] Error disconnecting WebRTC on tab switch:", e);
+        if (customElements.get("webrtc-camera")) {
+          this._webrtcElement.hass = this.hass;
         }
-        this._webrtcElement = null;
-        this._webrtcConfig = null;
-        this._cachedVideo = null;
-    }
-    
-    if ((changedProps.has("_activeTab") && this._activeTab === "history" && !this._events) ||
-        (changedProps.has("_selectedDate") && this._activeTab === "history")) {
-      this._fetchEvents();
+      }
+    } else if (this.config.is_popup && this._activeTab !== "live") {
+      if (this._micEnabled) this._micEnabled = false;
+      if (this._webrtcElement) this._disconnectWebrtc();
     }
 
-    if (changedProps.has("_historyMode") || (changedProps.has("_activeTab") && this._activeTab === "history")) {
-        if (this._historyMode === "timeline") {
-            const initialTime = this._selectedEvent ? this._selectedEvent.start_time : null;
-            this._setupTimelineVideo(initialTime);
-        } else if (this._hls) {
-            this._hls.destroy();
-            this._hls = null;
+    const enteringHistory = changedProps.has("_activeTab") && this._activeTab === "history";
+    const leavingHistory = changedProps.has("_activeTab") && this._activeTab !== "history";
+
+    if (leavingHistory) {
+      this._destroyTimelineHls();
+      this._destroyEventHls();
+      this._loadingVod = false;
+    }
+
+    if (this.config.is_popup && this._activeTab === "history") {
+      const stale = Date.now() - this._lastEventsFetch > 30000;
+      if ((enteringHistory && (!this._events || stale)) || changedProps.has("_selectedDate")) {
+        this._fetchEvents();
+      }
+
+      if (this._historyMode === "timeline") {
+        this._destroyEventHls();
+        if (this._events && (changedProps.has("_historyMode") || enteringHistory)) {
+          const pre = Math.max(0, Number(this.config.clip_pre_capture ?? 5));
+          const initialTime =
+            this._timelineCursorTime ||
+            (this._selectedEvent ? Math.max(0, this._selectedEvent.start_time - pre) : null);
+          this._setupTimelineVideo(initialTime);
         }
+        if (!this._programmaticScroll && !this._isPointerDown && !this._isUserScrolling && !this._isSeeking) {
+          this._syncTimelineScroll();
+        }
+      } else {
+        this._destroyTimelineHls();
+        if (this._selectedEvent && this._selectedEvent.has_clip) {
+          if (
+            changedProps.has("_selectedEvent") ||
+            changedProps.has("_historyMode") ||
+            enteringHistory ||
+            this._currentEventVideoId !== this._selectedEvent.id
+          ) {
+            this._setupEventVideo(this._selectedEvent);
+          }
+        } else {
+          this._destroyEventHls();
+          this._loadingVod = false;
+        }
+      }
     }
   }
 
@@ -372,23 +569,22 @@ class CameraDashboardCard extends LitElement {
     const getE = (domain, suffix) => findEntity(domain, suffix);
     const getButton = (suffix) => findEntity("button", suffix);
 
-    // Derive Frigate Base from standard entity if provided
     let frigateBase = "";
     if (this.config.frigate_camera_entity) {
       frigateBase = this.config.frigate_camera_entity.split(".")[1];
     }
 
     const getFrigate = (domain, suffix) => {
-        if (!frigateBase) return null;
-        const id = `${domain}.${frigateBase}_${suffix}`;
-        return this.hass.states[id] ? id : null;
+      if (!frigateBase) return null;
+      const id = `${domain}.${frigateBase}_${suffix}`;
+      return this.hass.states[id] ? id : null;
     };
 
     this._entities = {
       camera_wide: `camera.${cleanBase}${streamSuffix}`,
       camera_zoom: `camera.${cleanBase}${streamSuffix}_2`,
       title: this.config.title || this.hass.states[cameraEntity]?.attributes?.friendly_name?.split(" ")[0] || "Camera",
-      
+
       // Frigate Entities
       frigate_detect: getFrigate("switch", "detect"),
       frigate_motion: getFrigate("switch", "motion"),
@@ -396,6 +592,11 @@ class CameraDashboardCard extends LitElement {
       frigate_snapshots: getFrigate("switch", "snapshots"),
       frigate_review_alerts: getFrigate("switch", "review_alerts"),
       frigate_review_detections: getFrigate("switch", "review_detections"),
+      frigate_person: getFrigate("binary_sensor", "person_occupancy"),
+      frigate_vehicle: getFrigate("binary_sensor", "car_occupancy"),
+      frigate_animal: getFrigate("binary_sensor", "dog_occupancy") || getFrigate("binary_sensor", "cat_occupancy"),
+      frigate_motion_sensor: getFrigate("binary_sensor", "motion"),
+      frigate_last_face: getFrigate("sensor", "last_recognized_face"),
 
       motion: getE("binary_sensor", ["motion", "cell_motion"]),
       person: getE("binary_sensor", ["person", "person_detection"]),
@@ -440,6 +641,51 @@ class CameraDashboardCard extends LitElement {
     };
   }
 
+  _getFrigateCameraInfo(camState = null) {
+    const frigateCamEntity = this.config?.frigate_camera_entity;
+    let camName = "";
+    if (frigateCamEntity) {
+      camName = frigateCamEntity.split(".")[1] || "";
+    } else if (camState?.entity_id) {
+      camName = (camState.entity_id.split(".")[1] || "")
+        .replace("_fluent_2", "")
+        .replace("_fluent", "")
+        .replace("_clear_2", "")
+        .replace("_clear", "");
+    } else if (this.config?.camera_entity) {
+      camName = (this.config.camera_entity.split(".")[1] || "").split("_")[0];
+    }
+    return {
+      camName,
+      clientId: this.config?.frigate_client_id || "frigate",
+    };
+  }
+
+  _getDateRange(dateStr = this._selectedDate) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const startOfDay = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
+    const endOfDay = Math.floor(new Date(year, month - 1, day, 23, 59, 59).getTime() / 1000);
+    return { startOfDay, endOfDay };
+  }
+
+  _getDefaultTimelineTime(startOfDay) {
+    const now = Math.floor(Date.now() / 1000);
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    if (this._selectedDate === todayStr) {
+      return Math.max(startOfDay, now - 60);
+    }
+    return startOfDay + 43200;
+  }
+
+  _formatDuration(seconds) {
+    const s = Math.max(0, Math.round(seconds || 0));
+    if (s < 60) return `${s}s`;
+    const mins = Math.floor(s / 60);
+    const rem = s % 60;
+    return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
+  }
+
   _getActiveCameraState() {
     if (!this.hass || !this.hass.states || !this._entities) return null;
     const activeEntity =
@@ -451,10 +697,7 @@ class CameraDashboardCard extends LitElement {
     return activeEntity && this.hass.states[activeEntity] ? this.hass.states[activeEntity] : null;
   }
 
-  _toggleLens() {
-    if (this._switchingLens) return;
-    this._switchingLens = true;
-    this._activeLens = this._activeLens === "wide" ? "zoom" : "wide";
+  _startStreamSwitchTimer() {
     if (this._switchLensTimer) clearTimeout(this._switchLensTimer);
     const timeout = this.config?.is_popup ? 6000 : 1500;
     this._switchLensTimer = setTimeout(() => {
@@ -462,96 +705,122 @@ class CameraDashboardCard extends LitElement {
     }, timeout);
   }
 
+  _toggleLens() {
+    if (this._switchingLens) return;
+    this._switchingLens = true;
+    this._activeLens = this._activeLens === "wide" ? "zoom" : "wide";
+    if (this._activeLens === "zoom") {
+      this._streamQuality = "sub";
+    }
+    this._startStreamSwitchTimer();
+  }
+
+  _toggleStreamQuality(e) {
+    if (e) e.stopPropagation();
+    if (this._switchingLens || this._micEnabled) return;
+    this._switchingLens = true;
+    this._streamQuality = this._streamQuality === "main" ? "sub" : "main";
+    if (this._streamQuality === "main") {
+      this._activeLens = "wide";
+    }
+    this._startStreamSwitchTimer();
+  }
+
   // --- PROGRAMMATIC WEBRTC CARD INITIALIZER ---
   _initWebrtc(camState, wrapper, forceRemount = false) {
-    let baseName = camState.entity_id.split(".")[1] || "";
-    let cleanBase = baseName
-      .replace("_fluent_2", "")
-      .replace("_fluent", "")
-      .replace("_clear_2", "")
-      .replace("_clear", "");
+    const { camName: frigateBase } = this._getFrigateCameraInfo(camState);
+    let streamName;
+    if (this._micEnabled) {
+      const talkSuffix = this.config.talk_stream_suffix ?? "_sub";
+      streamName = `${frigateBase}${talkSuffix}`;
+    } else if (this._streamQuality === "main") {
+      streamName = `${frigateBase}_main`;
+    } else {
+      streamName = `${frigateBase}_sub${this._activeLens === "zoom" ? "_2" : ""}`;
+    }
 
-    // Bypass Home Assistant entity interception entirely and query Frigate's go2rtc server directly.
-    const frigateCamEntity = this.config.frigate_camera_entity;
-    const frigateBase = frigateCamEntity ? frigateCamEntity.split(".")[1] : cleanBase;
-    const streamName = `${frigateBase}_sub${this._activeLens === 'zoom' ? '_2' : ''}`;
+    const streamMode = this._streamQuality === "main" && !this._micEnabled ? "webrtc,mse" : "webrtc";
 
     const newConfig = {
-        type: "custom:webrtc-camera",
-        url: streamName,
-        mode: "webrtc", // Forces WebRTC, disables MSE fallback lag
-        media: this._micEnabled ? "video,audio,microphone" : "video,audio",
-        ui: false, // Disables native UI (removes unclickable fullscreen/save/PiP icons)
-        background: true, // Prevents sleeping stream during rotation/fullscreen shift
-        muted: true
+      type: "custom:webrtc-camera",
+      url: streamName,
+      mode: streamMode,
+      media: this._micEnabled ? "video,audio,microphone" : "video,audio",
+      ui: false,
+      background: true,
+      muted: true,
     };
 
-    // Re-mount cleanly if mic permission changes, on initial mount, or when switching stream URLs (wide <-> zoom)
     if (forceRemount || !this._webrtcElement || JSON.stringify(this._webrtcConfig) !== JSON.stringify(newConfig)) {
-        const oldElem = this._webrtcElement;
-        if (oldElem) {
-            try {
-                if (typeof oldElem.ondisconnect === 'function') {
-                    oldElem.ondisconnect();
-                }
-            } catch (e) {
-                console.warn("[Camera Card] Error disconnecting previous WebRTC stream:", e);
-            }
+      this._clearAttachVideoTimers();
+      const oldElem = this._webrtcElement;
+      if (oldElem) {
+        try {
+          if (typeof oldElem.ondisconnect === "function") {
+            oldElem.ondisconnect();
+          }
+        } catch (e) {
+          console.warn("[Camera Card] Error disconnecting previous WebRTC stream:", e);
         }
+      }
 
-        this._webrtcConfig = newConfig;
-        this._cachedVideo = null;
-        
-        const newElem = document.createElement("webrtc-camera");
-        newElem.className = "full-stream webrtc-stream compact-stream";
-        newElem.style.width = "100%";
-        newElem.style.height = "100%";
-        this._webrtcElement = newElem;
+      this._webrtcConfig = newConfig;
+      this._cachedVideo = null;
 
-        const mount = () => {
-            newElem.setConfig(newConfig);
-            newElem.hass = this.hass;
-            wrapper.replaceChildren(newElem);
+      const newElem = document.createElement("webrtc-camera");
+      newElem.className = "full-stream webrtc-stream compact-stream";
+      newElem.style.width = "100%";
+      newElem.style.height = "100%";
+      this._webrtcElement = newElem;
 
-            const attachVideoListener = () => {
-                const video = newElem.video || (newElem.shadowRoot ? newElem.shadowRoot.querySelector("video") : null);
-                if (video) {
-                    this._cachedVideo = video;
-                    const onPlaying = () => {
-                        if (this._switchLensTimer) {
-                            clearTimeout(this._switchLensTimer);
-                            this._switchLensTimer = null;
-                        }
-                        this._switchingLens = false;
-                        this._forceUnmute();
-                        video.removeEventListener("playing", onPlaying);
-                    };
-                    if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2) {
-                        onPlaying();
-                    } else {
-                        video.addEventListener("playing", onPlaying, { once: true });
-                    }
-                }
+      const mount = () => {
+        if (this._webrtcElement !== newElem) return;
+        newElem.setConfig(newConfig);
+        newElem.hass = this.hass;
+        wrapper.replaceChildren(newElem);
+
+        const attachVideoListener = () => {
+          if (this._webrtcElement !== newElem) return;
+          const video = newElem.video || (newElem.shadowRoot ? newElem.shadowRoot.querySelector("video") : null);
+          if (video) {
+            this._cachedVideo = video;
+            const onPlaying = () => {
+              if (this._switchLensTimer) {
+                clearTimeout(this._switchLensTimer);
+                this._switchLensTimer = null;
+              }
+              this._switchingLens = false;
+              this._forceUnmute();
+              video.removeEventListener("playing", onPlaying);
             };
-
-            attachVideoListener();
-            setTimeout(attachVideoListener, 100);
-            setTimeout(attachVideoListener, 400);
-            setTimeout(attachVideoListener, 1000);
+            if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2) {
+              onPlaying();
+            } else {
+              video.addEventListener("playing", onPlaying, { once: true });
+            }
+          }
         };
 
-        if (customElements.get("webrtc-camera")) {
-            mount();
-        } else {
-            customElements.whenDefined("webrtc-camera").then(mount);
-        }
+        attachVideoListener();
+        this._attachVideoTimers = [
+          setTimeout(attachVideoListener, 100),
+          setTimeout(attachVideoListener, 400),
+          setTimeout(attachVideoListener, 1000),
+        ];
+      };
+
+      if (customElements.get("webrtc-camera")) {
+        mount();
+      } else {
+        customElements.whenDefined("webrtc-camera").then(mount);
+      }
     } else {
-        if (!wrapper.contains(this._webrtcElement)) {
-            wrapper.replaceChildren(this._webrtcElement);
-        }
-        if (customElements.get("webrtc-camera")) {
-            this._webrtcElement.hass = this.hass;
-        }
+      if (!wrapper.contains(this._webrtcElement)) {
+        wrapper.replaceChildren(this._webrtcElement);
+      }
+      if (customElements.get("webrtc-camera")) {
+        this._webrtcElement.hass = this.hass;
+      }
     }
   }
 
@@ -572,6 +841,18 @@ class CameraDashboardCard extends LitElement {
   _setNum(entity_id, value) {
     if (entity_id)
       this._call("number", "set_value", { entity_id, value: Number(value) });
+  }
+  _commitSlider(key, entity_id) {
+    const val = this._sliderVals[key];
+    if (val === undefined) return;
+    this._setNum(entity_id, val);
+    if (this._sliderClearTimers[key]) clearTimeout(this._sliderClearTimers[key]);
+    this._sliderClearTimers[key] = setTimeout(() => {
+      const next = { ...this._sliderVals };
+      delete next[key];
+      this._sliderVals = next;
+      delete this._sliderClearTimers[key];
+    }, 500);
   }
   _setSelect(entity_id, option) {
     if (entity_id) this._call("select", "select_option", { entity_id, option });
@@ -632,17 +913,22 @@ class CameraDashboardCard extends LitElement {
   }
 
   _showToast(msg) {
+    if (this._toastTimer) clearTimeout(this._toastTimer);
     this._toastMsg = msg;
-    setTimeout(() => {
+    this._toastTimer = setTimeout(() => {
       this._toastMsg = null;
-    }, 3000);
+      this._toastTimer = null;
+    }, 3200);
   }
 
   _handleSafeAction(btnId, entityId) {
     const currentState = this._btnStates[btnId] || 'idle';
+    if (this._safeActionTimers[btnId]) {
+      clearTimeout(this._safeActionTimers[btnId]);
+    }
     if (currentState === 'idle') {
       this._btnStates = { ...this._btnStates, [btnId]: 'confirm' };
-      setTimeout(() => {
+      this._safeActionTimers[btnId] = setTimeout(() => {
         if (this._btnStates[btnId] === 'confirm') {
           this._btnStates = { ...this._btnStates, [btnId]: 'idle' };
         }
@@ -650,63 +936,123 @@ class CameraDashboardCard extends LitElement {
     } else if (currentState === 'confirm') {
       this._trigger(entityId);
       this._btnStates = { ...this._btnStates, [btnId]: 'success' };
-      setTimeout(() => {
+      this._safeActionTimers[btnId] = setTimeout(() => {
         this._btnStates = { ...this._btnStates, [btnId]: 'idle' };
       }, 2500);
     }
   }
 
-  // --- FRIGATE HISTORY FETCHING ---
-  async _fetchEvents() {
+  // --- FRIGATE HISTORY & VOD HELPERS ---
+  _getFilteredEvents(eventsList = this._events) {
+    if (!Array.isArray(eventsList)) return [];
+    return eventsList.filter((ev) => {
+      if (this._eventFilter !== "all" && ev.label !== this._eventFilter) return false;
+      if (this._zoneOnlyFilter && (!Array.isArray(ev.zones) || ev.zones.length === 0)) return false;
+      return true;
+    });
+  }
+
+  _setEventFilter(label) {
+    this._eventFilter = label;
+    const filtered = this._getFilteredEvents();
+    if (!filtered.some((ev) => ev.id === this._selectedEvent?.id)) {
+      this._selectedEvent = filtered[0] || null;
+      this._timelineCursorTime = null;
+    }
+  }
+
+  _toggleZoneFilter() {
+    this._zoneOnlyFilter = !this._zoneOnlyFilter;
+    const filtered = this._getFilteredEvents();
+    if (!filtered.some((ev) => ev.id === this._selectedEvent?.id)) {
+      this._selectedEvent = filtered[0] || null;
+      this._timelineCursorTime = null;
+    }
+  }
+
+  async _signFrigateUrl(rawUrl) {
+    try {
+      const signRes = await this.hass.connection.sendMessagePromise({
+        type: "auth/sign_path",
+        path: rawUrl,
+        expires: 86400,
+      });
+      if (signRes && signRes.path) return signRes.path;
+    } catch (e) {
+      try {
+        const signRes2 = await this.hass.connection.sendMessagePromise({
+          type: "frigate/sign_url",
+          path: rawUrl,
+          expires: 86400,
+        });
+        if (signRes2 && signRes2.path) return signRes2.path;
+      } catch (e2) {}
+    }
+    return rawUrl;
+  }
+
+  async _loadHls() {
+    if (!this._hlsPromise) {
+      this._hlsPromise = import("https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.mjs")
+        .then((mod) => mod.default || mod)
+        .catch((err) => {
+          this._hlsPromise = null;
+          throw err;
+        });
+    }
+    return this._hlsPromise;
+  }
+
+  async _fetchEvents(manualRefresh = false) {
     if (!this.hass) return;
     if (this._fetchingEvents) return;
     this._fetchingEvents = true;
 
     try {
-      const frigateCamEntity = this.config.frigate_camera_entity;
-      const camName = frigateCamEntity 
-          ? frigateCamEntity.split(".")[1] 
-          : this.config.camera_entity.split(".")[1].split("_")[0];
-      const clientId = this.config.frigate_client_id || "frigate";
-      
-      const [year, month, day] = this._selectedDate.split("-").map(Number);
-      const startOfDay = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
-      const endOfDay = Math.floor(new Date(year, month - 1, day, 23, 59, 59).getTime() / 1000);
+      const { camName, clientId } = this._getFrigateCameraInfo();
+      const { startOfDay, endOfDay } = this._getDateRange();
 
       const wsData = await this.hass.connection.sendMessagePromise({
         type: "frigate/events/get",
-        instance_id: clientId, 
-        limit: 2000, 
+        instance_id: clientId,
+        cameras: camName ? [camName] : undefined,
+        limit: 2000,
         after: startOfDay,
-        before: endOfDay
+        before: endOfDay,
       });
 
       let parsed = wsData;
-      
       if (typeof wsData === "string") {
-          try { parsed = JSON.parse(wsData); } catch(e) { console.error("JSON Parse failed", e); }
+        try { parsed = JSON.parse(wsData); } catch (e) { console.error("JSON Parse failed", e); }
       }
-
       if (parsed && parsed.events) {
-          parsed = parsed.events;
-          if (typeof parsed === "string") {
-              try { parsed = JSON.parse(parsed); } catch(e) {}
-          }
+        parsed = parsed.events;
+        if (typeof parsed === "string") {
+          try { parsed = JSON.parse(parsed); } catch (e) {}
+        }
       }
 
       if (Array.isArray(parsed)) {
-          const filteredEvents = parsed.filter(ev => ev.camera === camName);
-          filteredEvents.sort((a, b) => b.start_time - a.start_time);
-          this._events = filteredEvents;
-          this._selectedEvent = filteredEvents.length > 0 ? filteredEvents[0] : null;
+        const filteredEvents = camName ? parsed.filter((ev) => ev.camera === camName) : parsed;
+        filteredEvents.sort((a, b) => b.start_time - a.start_time);
+        this._events = filteredEvents;
+        this._lastEventsFetch = Date.now();
 
-          if (filteredEvents.length === 0) {
-              this._historyMode = "timeline";
-          }
+        const visible = this._getFilteredEvents(filteredEvents);
+        const keepSelected = visible.find((ev) => ev.id === this._selectedEvent?.id);
+        this._selectedEvent = keepSelected || visible[0] || filteredEvents[0] || null;
+
+        if (filteredEvents.length === 0 && this._historyMode === "events") {
+          this._historyMode = "timeline";
+        } else if (this._historyMode === "timeline" && !this._loadedVodStart) {
+          this._setupTimelineVideo(this._timelineCursorTime);
+        }
+        if (manualRefresh) {
+          this._showToast(`Loaded ${filteredEvents.length} event${filteredEvents.length === 1 ? "" : "s"}`);
+        }
       } else {
-          throw new Error("Invalid payload format received from Frigate WS");
+        throw new Error("Invalid payload format received from Frigate WS");
       }
-
     } catch (e) {
       console.error("[Camera Card Debug] WebSocket fetch failed:", e);
       this._events = [];
@@ -718,88 +1064,13 @@ class CameraDashboardCard extends LitElement {
     }
   }
 
-  // --- BOTTOM SHEET GESTURES & ANIMATION ---
-  _closeSheet() {
-    const sheet = this.shadowRoot?.querySelector(".sheet-content");
-    const backdrop = this.shadowRoot?.querySelector(".sheet-backdrop");
-    
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
-      if (document.exitFullscreen) document.exitFullscreen();
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-    }
-    this._pseudoFullscreen = false;
-
-    if (sheet && backdrop) {
-      sheet.style.transform = "translateY(100%)";
-      backdrop.style.opacity = "0";
-      setTimeout(() => {
-        this._sheetOpen = false;
-        this._micEnabled = false;
-        sheet.style.transform = "";
-        backdrop.style.opacity = "";
-      }, 300);
-    } else {
-      this._sheetOpen = false;
-      this._micEnabled = false;
-    }
-  }
-
-  _handleTouchStart(e) {
-    if (e.target.closest("input") || e.target.closest(".timeline-scroll") || e.target.closest(".global-timeline-scroll-area")) {
-      this._dragging = false;
-      return;
-    }
-    const contentArea = this.shadowRoot.querySelector(".content-area");
-    if (
-      contentArea &&
-      contentArea.contains(e.target) &&
-      contentArea.scrollTop > 0
-    ) {
-      this._dragging = false;
-      return;
-    }
-    this._startY = e.touches[0].clientY;
-    this._dragging = true;
-    const sheet = this.shadowRoot.querySelector(".sheet-content");
-    if (sheet) sheet.style.transition = "none";
-  }
-
-  _handleTouchMove(e) {
-    if (!this._dragging) return;
-    const deltaY = e.touches[0].clientY - this._startY;
-    if (deltaY > 0) {
-      const sheet = this.shadowRoot.querySelector(".sheet-content");
-      if (sheet) sheet.style.transform = `translateY(${deltaY}px)`;
-    }
-  }
-
-  _handleTouchEnd(e) {
-    if (!this._dragging) return;
-    this._dragging = false;
-    const sheet = this.shadowRoot.querySelector(".sheet-content");
-    if (!sheet) return;
-
-    const deltaY = e.changedTouches[0].clientY - this._startY;
-    sheet.style.transition = "transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
-
-    if (deltaY > 150) {
-      this._closeSheet();
-    } else {
-      sheet.style.transform = "translateY(0)";
-      setTimeout(() => {
-        sheet.style.transform = "";
-      }, 300);
-    }
-  }
-
   // --- RENDERING MAIN ---
   _openPopup() {
-    // Attempt to unlock the browser's audio engine using the current synchronous user gesture
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (AudioContext) {
-          const ctx = CameraDashboardCard._sharedAudioCtx || (CameraDashboardCard._sharedAudioCtx = new AudioContext());
-          ctx.resume();
+        const ctx = CameraDashboardCard._sharedAudioCtx || (CameraDashboardCard._sharedAudioCtx = new AudioContext());
+        ctx.resume();
       }
     } catch (e) {
       console.log("[Camera Card] AudioContext unlock failed", e);
@@ -871,8 +1142,8 @@ class CameraDashboardCard extends LitElement {
 
     return html`
       <ha-card class="compact-view" @click=${this._openPopup}>
-        ${!camState || camState.state === "unavailable" 
-          ? html`<div class="offline-placeholder">No Feed Available</div>` 
+        ${!camState || camState.state === "unavailable"
+          ? html`<div class="offline-placeholder">No Feed Available</div>`
           : html`<ha-camera-stream class="compact-stream" .hass=${this.hass} .stateObj=${camState} muted></ha-camera-stream>`
         }
 
@@ -908,6 +1179,13 @@ class CameraDashboardCard extends LitElement {
   _renderBottomSheetContent() {
     const camState = this._getActiveCameraState();
     const isOffline = !camState || camState.state === "unavailable";
+    const lastFaceEnt = this._entities.frigate_last_face ? this.hass.states[this._entities.frigate_last_face] : null;
+    const lastFace =
+      lastFaceEnt &&
+      lastFaceEnt.state &&
+      !["none", "unknown", "unavailable"].includes(String(lastFaceEnt.state).toLowerCase())
+        ? lastFaceEnt.state
+        : null;
 
     return html`
       <div class="sheet-content ${this._pseudoFullscreen ? 'pseudo-fs-parent' : ''}">
@@ -917,44 +1195,50 @@ class CameraDashboardCard extends LitElement {
         </div>
 
         <div class="sheet-container">
-            <div class="header">
-              <div class="header-left">
-                <h1 class="title">
-                  <ha-icon icon="mdi:cctv" style="margin-right: 8px; color: var(--primary-color)"></ha-icon>
-                  ${this._entities.title}
-                </h1>
-                <p class="subtitle">${isOffline ? "Offline" : "Connected & Streaming"}</p>
-              </div>
-              <div class="header-right" style="display: flex; gap: 6px;">
-                ${this._renderDetectionBadge("person", Icons.User, "var(--primary-color)")}
-                ${this._renderDetectionBadge("vehicle", Icons.Car, "var(--warning-color)")}
-                ${this._renderDetectionBadge("animal", Icons.Dog, "var(--success-color)")}
-                ${this._renderDetectionBadge("motion", Icons.Activity, "#ef4444")}
+          <div class="header">
+            <div class="header-left">
+              <div class="popup-status-row">
+                <span class="status-dot ${isOffline ? "offline" : ""}"></span>
+                <span class="popup-status-text">${isOffline ? "Offline" : "Connected & Streaming"}</span>
+                ${lastFace ? html`<span class="face-pill">${Icons.User}<span>${lastFace}</span></span>` : ""}
               </div>
             </div>
-
-            <div class="nav">
-              ${this._renderNavBtn("live", Icons.Video, "Live View")}
-              ${this._renderNavBtn("history", Icons.History, "History")}
-              ${this._renderNavBtn("detection", Icons.Target, "Detection")}
-              ${this._renderNavBtn("settings", Icons.Settings, "Device")}
-            </div>
-
-            <div class="content-area">
-              ${this._activeTab === "live" ? this._renderLiveTab() : ""}
-              ${this._activeTab === "history" ? this._renderHistoryTab() : ""}
-              ${this._activeTab === "detection" ? this._renderDetectionTab() : ""}
-              ${this._activeTab === "settings" ? this._renderSettingsTab() : ""}
+            <div class="header-right" style="display: flex; gap: 6px;">
+              ${this._renderDetectionBadge("person", Icons.User, "var(--primary-color)")}
+              ${this._renderDetectionBadge("vehicle", Icons.Car, "var(--warning-color)")}
+              ${this._renderDetectionBadge("animal", Icons.Dog, "var(--success-color)")}
+              ${this._renderDetectionBadge("motion", Icons.Activity, "#ef4444")}
             </div>
           </div>
+
+          <div class="nav">
+            ${this._renderNavBtn("live", Icons.Video, "Live View")}
+            ${this._renderNavBtn("history", Icons.History, "History")}
+            ${this._renderNavBtn("detection", Icons.Target, "Detection")}
+            ${this._renderNavBtn("settings", Icons.Settings, "Device")}
+          </div>
+
+          <div class="content-area">
+            ${this._activeTab === "live" ? this._renderLiveTab() : ""}
+            ${this._activeTab === "history" ? this._renderHistoryTab() : ""}
+            ${this._activeTab === "detection" ? this._renderDetectionTab() : ""}
+            ${this._activeTab === "settings" ? this._renderSettingsTab() : ""}
+          </div>
         </div>
+      </div>
     `;
   }
 
   _renderNavBtn(id, icon, label) {
     const active = this._activeTab === id;
     return html`
-      <button class="nav-btn ${active ? "active" : ""}" @click=${() => (this._activeTab = id)}>
+      <button
+        class="nav-btn ${active ? "active" : ""}"
+        @click=${() => {
+          if (id !== "live" && this._micEnabled) this._micEnabled = false;
+          this._activeTab = id;
+        }}
+      >
         ${icon}
         <span class="nav-btn-text ${active ? "active" : ""}">${label}</span>
       </button>
@@ -962,7 +1246,19 @@ class CameraDashboardCard extends LitElement {
   }
 
   _renderDetectionBadge(type, icon, activeColor, isOverlay = false) {
-    const entId = this._entities[type];
+    const frigateMap = {
+      person: this._entities.frigate_person,
+      vehicle: this._entities.frigate_vehicle,
+      animal: this._entities.frigate_animal,
+      motion: this._entities.frigate_motion_sensor,
+    };
+    let entId = this._entities[type];
+    if (this.config?.use_frigate_badges && frigateMap[type]) {
+      const fState = this.hass.states[frigateMap[type]];
+      if (fState && fState.state !== "unavailable") {
+        entId = frigateMap[type];
+      }
+    }
     if (!entId || !this.hass.states[entId]) return "";
     const isActive = this.hass.states[entId].state === "on";
 
@@ -978,10 +1274,49 @@ class CameraDashboardCard extends LitElement {
     `;
   }
 
+  _renderDpad(prefix = "dpad") {
+    return html`
+      <div class="${prefix}-container">
+        <button class="${prefix}-btn ${prefix}-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
+        <button class="${prefix}-btn ${prefix}-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
+        <button class="${prefix}-btn ${prefix}-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
+        <button class="${prefix}-btn ${prefix}-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
+      </div>
+    `;
+  }
+
+  _renderZoomSlider(zoomEnt, isFullscreen = false) {
+    const val = this._sliderVals["zoom"] !== undefined ? this._sliderVals["zoom"] : zoomEnt.state;
+    return html`
+      <input
+        type="range"
+        class="vertical-slider"
+        min="${zoomEnt.attributes.min || 0}"
+        max="${zoomEnt.attributes.max || 100}"
+        step="${zoomEnt.attributes.step || 1}"
+        .value=${val}
+        @touchstart=${(e) => e.stopPropagation()}
+        @touchmove=${(e) => e.stopPropagation()}
+        @pointerdown=${isFullscreen ? () => { this._ptzActive = true; this._wakeFullscreenControls(); } : null}
+        @pointerup=${isFullscreen ? () => { this._ptzActive = false; this._wakeFullscreenControls(); } : null}
+        @pointercancel=${isFullscreen ? () => { this._ptzActive = false; this._wakeFullscreenControls(); } : null}
+        @input=${(e) => {
+          this._sliderVals["zoom"] = e.target.value;
+          if (isFullscreen) this._wakeFullscreenControls();
+          this.requestUpdate();
+        }}
+        @change=${() => this._commitSlider("zoom", this._entities.ptz_zoom)}
+      />
+    `;
+  }
+
   // --- TAB: LIVE VIEW WITH TWO WAY AUDIO & FS OVERLAY ---
   _renderLiveTab() {
     const camState = this._getActiveCameraState();
     const hasTelephoto = !!this.hass.states[this._entities.camera_zoom];
+    const showQualityToggle = !!this.config.frigate_camera_entity && this._activeLens === "wide" && !this._micEnabled;
+    const showMic = camState && !this.config.hide_mic;
+    const isFullscreenActive = this._isFullscreen || this._pseudoFullscreen;
 
     const trackState = this._entities.auto_track ? this.hass.states[this._entities.auto_track]?.state : "off";
     const lightState = this._entities.floodlight ? this.hass.states[this._entities.floodlight]?.state : "off";
@@ -989,94 +1324,116 @@ class CameraDashboardCard extends LitElement {
 
     const zoomEnt = this._entities.ptz_zoom ? this.hass.states[this._entities.ptz_zoom] : null;
     const showZoom = zoomEnt && !this.config.hide_zoom;
-    const showPTZ = !this.config.hide_ptz;
-    
-    const showLeftPill = this._entities.floodlight || this._entities.siren;
-    const showRightPill = this._entities.auto_track || this._entities.guard_return;
+    const hasPTZ = !!(this._entities.ptz_up || this._entities.ptz_down || this._entities.ptz_left || this._entities.ptz_right);
+    const showPTZ = hasPTZ && !this.config.hide_ptz;
+
+    const showLeftPill = !!(this._entities.floodlight || this._entities.siren);
+    const showRightPill = !!(this._entities.auto_track || this._entities.guard_return);
     const showPill = showLeftPill || showRightPill;
-    const showRightColumn = showPTZ || showPill;
+    const showGuardGoTo = !!this._entities.guard_go_to;
+    const showGuardSet = !!this._entities.guard_set;
+    const showRightColumn = showPill || (showPTZ && (showGuardGoTo || showGuardSet));
 
     return html`
-      <div class="camera-box ${this._pseudoFullscreen ? 'pseudo-fullscreen' : ''}" 
-           @mousemove=${(e) => { this._wakeFullscreenControls(e); }} 
-           @touchstart=${(e) => { this._wakeFullscreenControls(e); }} 
-           @click=${(e) => { this._wakeFullscreenControls(e); this._forceUnmute(); }}>
-           
+      <div class="camera-box ${this._pseudoFullscreen ? 'pseudo-fullscreen' : ''}"
+           @mousemove=${(e) => { this._wakeFullscreenControls(e); }}
+           @touchstart=${(e) => { this._wakeFullscreenControls(e); }}
+           @click=${(e) => {
+             this._wakeFullscreenControls(e);
+             if (!this._isMuted && !this._micEnabled) this._forceUnmute();
+           }}>
+
         ${camState ? html`<div id="webrtc-wrapper-live" style="width:100%;height:100%;"></div>` : html`<div style="color: var(--secondary-text-color)">No Feed Available</div>`}
-        
+
         ${this._switchingLens ? html`
           <div class="stream-switching-overlay">
             <ha-circular-progress active size="small"></ha-circular-progress>
-            <span>Connecting ${this._activeLens === 'zoom' ? 'Zoom' : 'Wide'} Lens...</span>
+            <span>${this._streamQuality === "main" ? "Connecting 4K Stream..." : `Connecting ${this._activeLens === "zoom" ? "Zoom" : "Wide"} Lens...`}</span>
           </div>
         ` : ''}
-        
+
+        ${this._micEnabled ? html`
+          <div class="mic-live-banner">
+            <span class="mic-live-dot"></span>
+            MIC LIVE · Speaker Muted
+          </div>
+        ` : ''}
+
         ${camState ? html`
+          <button
+            class="overlay-icon-btn live-fs-btn fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}"
+            title="${isFullscreenActive ? 'Exit Fullscreen' : 'Fullscreen'}"
+            @click=${(e) => this._toggleFullscreen(e)}
+          >
+            ${isFullscreenActive ? Icons.Minimize : Icons.Maximize}
+          </button>
+
+          <button
+            class="overlay-icon-btn live-mute-btn fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}"
+            title="${this._isMuted || this._micEnabled ? 'Unmute Audio' : 'Mute Audio'}"
+            @click=${(e) => this._toggleMute(e)}
+          >
+            ${this._isMuted || this._micEnabled ? Icons.VolumeX : Icons.Volume2}
+          </button>
+        ` : ''}
+
+        <div class="live-br-controls fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}">
+          ${showMic ? html`
             <button
-                class="mic-toggle-btn fs-control-fade ${this._micEnabled ? 'mic-active' : ''} ${this._fsControlsVisible ? '' : 'fs-hidden'}"
-                @click=${(e) => {
-                  e.stopPropagation();
-                  this._micEnabled = !this._micEnabled;
-                  if (this._micEnabled) this._showToast("Two-Way Audio Started");
-                }}
+              class="mic-toggle-btn ${this._micEnabled ? 'mic-active' : ''}"
+              title="${this._micEnabled ? 'Stop Two-Way Audio' : 'Start Two-Way Audio'}"
+              @click=${(e) => this._toggleMic(e)}
             >
               ${this._micEnabled ? Icons.Mic : Icons.MicOff}
             </button>
-        ` : ''}
+          ` : ''}
 
-        ${hasTelephoto
-          ? html`
-              <button
-                class="lens-toggle fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'} ${this._switchingLens ? 'disabled' : ''}"
-                ?disabled=${this._switchingLens}
-                @click=${(e) => {
-                  e.stopPropagation();
-                  this._toggleLens();
-                }}
-              >
-                <ha-icon icon="${this._activeLens === "wide" ? "mdi:magnify-plus-outline" : "mdi:magnify-minus-outline"}" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
-                ${this._activeLens === "wide" ? "Wide" : "Zoom"}
-              </button>
-            `
-          : ""}
-          
-        ${(showZoom || showPTZ) ? html`
-            <div class="landscape-ptz-overlay fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}">
-              ${showPTZ ? html`
-                <div class="fs-dpad-container">
-                  <button class="fs-dpad-btn fs-dpad-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
-                  <button class="fs-dpad-btn fs-dpad-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
-                  <button class="fs-dpad-btn fs-dpad-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
-                  <button class="fs-dpad-btn fs-dpad-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
-                </div>
+          ${(showQualityToggle || hasTelephoto) ? html`
+            <div class="live-br-row">
+              ${showQualityToggle ? html`
+                <button
+                  class="lens-toggle ${this._streamQuality === 'main' ? 'quality-4k' : ''} ${this._switchingLens ? 'disabled' : ''}"
+                  ?disabled=${this._switchingLens}
+                  title="Toggle SD / 4K Stream"
+                  @click=${(e) => this._toggleStreamQuality(e)}
+                >
+                  ${this._streamQuality === "main" ? "4K" : "SD"}
+                </button>
               ` : ''}
-              
-              ${showZoom ? html`
-                <div class="fs-zoom-panel">
-                  <span style="font-weight: bold;">+</span>
-                  <input
-                    type="range"
-                    class="vertical-slider"
-                    min="${zoomEnt.attributes.min || 0}"
-                    max="${zoomEnt.attributes.max || 100}"
-                    step="${zoomEnt.attributes.step || 1}"
-                    .value=${this._sliderVals["zoom"] || zoomEnt.state}
-                    @touchstart=${(e) => e.stopPropagation()}
-                    @touchmove=${(e) => e.stopPropagation()}
-                    @pointerdown=${() => { this._ptzActive = true; this._wakeFullscreenControls(); }}
-                    @pointerup=${() => { this._ptzActive = false; this._wakeFullscreenControls(); }}
-                    @pointercancel=${() => { this._ptzActive = false; this._wakeFullscreenControls(); }}
-                    @input=${(e) => { this._sliderVals["zoom"] = e.target.value; this._wakeFullscreenControls(); this.requestUpdate(); }}
-                    @change=${() => this._setNum(this._entities.ptz_zoom, this._sliderVals["zoom"])}
-                  />
-                  <span style="font-weight: bold;">-</span>
-                </div>
+
+              ${hasTelephoto ? html`
+                <button
+                  class="lens-toggle ${this._switchingLens ? 'disabled' : ''}"
+                  ?disabled=${this._switchingLens}
+                  @click=${(e) => {
+                    e.stopPropagation();
+                    this._toggleLens();
+                  }}
+                >
+                  <ha-icon icon="${this._activeLens === "wide" ? "mdi:magnify-plus-outline" : "mdi:magnify-minus-outline"}" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
+                  ${this._activeLens === "wide" ? "Wide" : "Zoom"}
+                </button>
               ` : ''}
             </div>
+          ` : ''}
+        </div>
+
+        ${(showZoom || showPTZ) ? html`
+          <div class="landscape-ptz-overlay fs-control-fade ${this._fsControlsVisible ? '' : 'fs-hidden'}">
+            ${showPTZ ? this._renderDpad("fs-dpad") : ''}
+
+            ${showZoom ? html`
+              <div class="fs-zoom-panel">
+                <span style="font-weight: bold;">+</span>
+                ${this._renderZoomSlider(zoomEnt, true)}
+                <span style="font-weight: bold;">-</span>
+              </div>
+            ` : ''}
+          </div>
         ` : ''}
       </div>
 
-      ${showZoom || showRightColumn
+      ${showZoom || showPTZ || showRightColumn
         ? html`
             <div class="ptz-layout">
               ${showZoom
@@ -1084,34 +1441,14 @@ class CameraDashboardCard extends LitElement {
                     <div class="zoom-panel">
                       <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 100%;">
                         <span style="color: var(--md-sys-color-on-surface, var(--primary-text-color)); font-weight: bold;">+</span>
-                        <input
-                          type="range"
-                          class="vertical-slider"
-                          min="${zoomEnt.attributes.min || 0}"
-                          max="${zoomEnt.attributes.max || 100}"
-                          step="${zoomEnt.attributes.step || 1}"
-                          .value=${this._sliderVals["zoom"] || zoomEnt.state}
-                          @touchstart=${(e) => e.stopPropagation()}
-                          @touchmove=${(e) => e.stopPropagation()}
-                          @input=${(e) => { this._sliderVals["zoom"] = e.target.value; this.requestUpdate(); }}
-                          @change=${() => this._setNum(this._entities.ptz_zoom, this._sliderVals["zoom"])}
-                        />
+                        ${this._renderZoomSlider(zoomEnt, false)}
                         <span style="color: var(--md-sys-color-on-surface, var(--primary-text-color)); font-weight: bold;">-</span>
                       </div>
                     </div>
                   `
                 : ""}
-              
-              ${showPTZ
-                ? html`
-                    <div class="dpad-container">
-                      <button class="dpad-btn dpad-up" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_up)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronUp}</button>
-                      <button class="dpad-btn dpad-left" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_left)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronLeft}</button>
-                      <button class="dpad-btn dpad-right" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_right)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronRight}</button>
-                      <button class="dpad-btn dpad-down" @pointerdown=${(e) => this._startPtz(e, this._entities.ptz_down)} @pointerup=${(e) => this._stopPtz(e)} @pointercancel=${(e) => this._stopPtz(e)}>${Icons.ChevronDown}</button>
-                    </div>
-                  `
-                : ""}
+
+              ${showPTZ ? this._renderDpad("dpad") : ""}
 
               ${showRightColumn
                 ? html`
@@ -1136,11 +1473,16 @@ class CameraDashboardCard extends LitElement {
                           `
                         : ""}
 
-                      ${showPTZ
+                      ${showPTZ && showGuardGoTo
                         ? html`
                             <button class="action-btn" @click=${() => this._trigger(this._entities.guard_go_to)}>
                               <ha-icon icon="mdi:target" style="margin-right: 6px;"></ha-icon> Go to Guard
                             </button>
+                          `
+                        : ""}
+
+                      ${showPTZ && showGuardSet
+                        ? html`
                             <button class="action-btn secondary ${this._btnStates['guard_set'] === 'confirm' ? 'btn-confirm' : this._btnStates['guard_set'] === 'success' ? 'btn-success' : ''}" @click=${() => this._handleSafeAction('guard_set', this._entities.guard_set)}>
                               ${this._btnStates['guard_set'] === 'confirm' ? 'Tap to Confirm' : this._btnStates['guard_set'] === 'success' ? 'Guard Point Set!' : 'Set Guard Point'}
                             </button>
@@ -1161,117 +1503,419 @@ class CameraDashboardCard extends LitElement {
       return html`<div style="text-align:center; padding: 20px; color: var(--secondary-text-color);">Loading event history...</div>`;
     }
 
-    const getMediaUrl = (eventId, type) => {
-        return `/api/frigate/notifications/${eventId}/${type}`;
-    };
+    const { camName, clientId } = this._getFrigateCameraInfo();
+    const getMediaUrl = (eventId, type) => `/api/frigate/${clientId}/notifications/${eventId}/${type}`;
+    const filteredEvents = this._getFilteredEvents();
+    const activeEvent =
+      this._selectedEvent && filteredEvents.some((ev) => ev.id === this._selectedEvent.id)
+        ? this._selectedEvent
+        : filteredEvents[0] || null;
+    const hasClip = activeEvent && activeEvent.has_clip;
+    const isFullscreenActive = this._isFullscreen || this._pseudoFullscreen;
 
-    const hasClip = this._selectedEvent && this._selectedEvent.has_clip;
-    
+    const pre = Math.max(0, Number(this.config.clip_pre_capture ?? 5));
+    const post = Math.max(0, Number(this.config.clip_post_capture ?? 30));
+
+    // Distinct labels and zone counts for filter chips
+    const labelCounts = new Map();
+    let hasZonedEvents = false;
+    for (const ev of this._events) {
+      if (ev.label) {
+        labelCounts.set(ev.label, (labelCounts.get(ev.label) || 0) + 1);
+      }
+      if (Array.isArray(ev.zones) && ev.zones.length > 0) {
+        hasZonedEvents = true;
+      }
+    }
+    const labelList = Array.from(labelCounts.entries()).sort((a, b) => b[1] - a[1]);
+
     return html`
       <div class="history-player camera-box ${this._pseudoFullscreen ? 'pseudo-fullscreen' : ''}">
         ${this._historyMode === "timeline" ? html`
-            <!-- IMPORTANT: REMOVED AUTOPLAY TO PREVENT CRASHES -->
-            <video
-              id="history-video-timeline"
-              controls
-              muted
-              playsinline
-              class="full-stream"
-              @timeupdate=${(e) => {
-                if (this._loadedVodStart) {
-                  if (!this._isSeeking && !this._isPointerDown && !this._isUserScrolling) {
-                      this._timelineCursorTime = this._loadedVodStart + e.target.currentTime;
-                      this._syncTimelineScroll();
-                  }
+          <video
+            id="history-video-timeline"
+            controls
+            muted
+            playsinline
+            class="full-stream"
+            @timeupdate=${(e) => {
+              if (this._loadedVodStart) {
+                if (!this._isSeeking && !this._isPointerDown && !this._isUserScrolling) {
+                  this._timelineCursorTime = this._loadedVodStart + e.target.currentTime;
+                  this._syncTimelineScroll();
                 }
-              }}
-            ></video>
-        ` : (this._selectedEvent 
-          ? hasClip 
+              }
+            }}
+          ></video>
+        ` : (activeEvent
+          ? hasClip
             ? html`
                 <video
                   id="history-video-event"
                   controls
-                  autoplay
                   playsinline
-                  src="${getMediaUrl(this._selectedEvent.id, "clip.mp4")}"
-                  poster="${getMediaUrl(this._selectedEvent.id, "thumbnail.jpg")}"
+                  poster="${getMediaUrl(activeEvent.id, "thumbnail.jpg")}"
                   class="full-stream"
                   @timeupdate=${(e) => {
                     this._videoCurrentTime = e.target.currentTime;
-                    if (this._selectedEvent && !this._isScrubbingTimeline) {
-                      this._timelineCursorTime = this._selectedEvent.start_time + this._videoCurrentTime;
-                    }
                   }}
                   @loadedmetadata=${(e) => {
                     this._videoDuration = e.target.duration;
+                    this._loadingVod = false;
                     if (this._pendingSeek !== null && this._pendingSeek !== undefined) {
                       e.target.currentTime = this._pendingSeek;
                       this._pendingSeek = null;
                     }
                   }}
-                  @play=${() => this._isPlaying = true}
-                  @pause=${() => this._isPlaying = false}
+                  @play=${() => (this._isPlaying = true)}
+                  @pause=${() => (this._isPlaying = false)}
                 ></video>
               `
-            : html`<img src="${getMediaUrl(this._selectedEvent.id, "snapshot.jpg")}" class="full-stream" style="object-fit: contain;" onerror="this.src='${getMediaUrl(this._selectedEvent.id, "thumbnail.jpg")}'" />`
-          : html`<div class="offline-placeholder">No events found for this date</div>`)}
+            : html`<img src="${getMediaUrl(activeEvent.id, "snapshot.jpg")}" class="full-stream" style="object-fit: contain;" onerror="this.src='${getMediaUrl(activeEvent.id, "thumbnail.jpg")}'" />`
+          : html`<div class="offline-placeholder">${this._events.length === 0 ? "No events found for this date" : "No events match current filter"}</div>`)}
+
+        ${this._loadingVod ? html`
+          <div class="stream-switching-overlay">
+            <ha-circular-progress active size="small"></ha-circular-progress>
+            <span>${this._historyMode === "timeline" ? "Loading timeline..." : "Loading clip..."}</span>
+          </div>
+        ` : ''}
+
+        ${(this._historyMode === "timeline" || activeEvent) ? html`
+          <button
+            class="overlay-icon-btn live-fs-btn"
+            title="${isFullscreenActive ? 'Exit Fullscreen' : 'Fullscreen'}"
+            @click=${(e) => this._toggleFullscreen(e)}
+          >
+            ${isFullscreenActive ? Icons.Minimize : Icons.Maximize}
+          </button>
+        ` : ''}
       </div>
 
-      <div class="card-panel" style="padding: 16px 0; border: none; background: transparent; box-shadow: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 16px; margin-bottom: 12px; gap: 8px;">
-          
-          <div class="history-toggle-wrap" style="flex: 1; max-width: 250px;">
-            <button class="history-toggle-btn ${this._historyMode === 'events' ? 'active' : ''}" @click=${() => this._historyMode = 'events'}>Events</button>
-            <button class="history-toggle-btn ${this._historyMode === 'timeline' ? 'active' : ''}" @click=${() => this._historyMode = 'timeline'}>Timeline</button>
+      ${this._historyMode === "events" && activeEvent ? this._renderSelectedEventMeta(activeEvent, camName, pre, post, getMediaUrl) : ''}
+
+      <div class="card-panel" style="padding: 14px 0; border: none; background: transparent; box-shadow: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 16px; margin-bottom: 10px; gap: 8px;">
+          <div class="history-toggle-wrap" style="flex: 1; max-width: 240px;">
+            <button class="history-toggle-btn ${this._historyMode === 'events' ? 'active' : ''}" @click=${() => (this._historyMode = 'events')}>Events</button>
+            <button class="history-toggle-btn ${this._historyMode === 'timeline' ? 'active' : ''}" @click=${() => (this._historyMode = 'timeline')}>Timeline</button>
           </div>
-          
-          <div class="date-picker-wrap" style="flex-shrink: 0;">
-            ${Icons.Calendar}
-            <input type="date" class="history-date-picker" .value=${this._selectedDate} @change=${(e) => { this._selectedDate = e.target.value; this._historyMode = 'events'; }}/>
+
+          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <div class="date-picker-wrap">
+              ${Icons.Calendar}
+              <input
+                type="date"
+                class="history-date-picker"
+                .value=${this._selectedDate}
+                @change=${(e) => {
+                  this._eventFilter = "all";
+                  this._zoneOnlyFilter = false;
+                  this._timelineCursorTime = null;
+                  this._loadedVodStart = null;
+                  this._loadedVodEnd = null;
+                  this._selectedDate = e.target.value;
+                }}
+              />
+            </div>
+            <button
+              class="icon-pill-btn ${this._fetchingEvents ? 'spinning' : ''}"
+              title="Refresh events"
+              @click=${() => this._fetchEvents(true)}
+            >
+              ${Icons.RefreshCw}
+            </button>
           </div>
         </div>
-        
+
+        ${this._historyMode === "events" && this._events.length > 0 ? html`
+          <div class="filter-chips-row">
+            <button class="filter-chip ${this._eventFilter === 'all' ? 'active' : ''}" @click=${() => this._setEventFilter("all")}>
+              All (${this._events.length})
+            </button>
+            ${labelList.map(([label, count]) => html`
+              <button class="filter-chip ${this._eventFilter === label ? 'active' : ''}" @click=${() => this._setEventFilter(label)}>
+                ${formatSettingName(label)} (${count})
+              </button>
+            `)}
+            ${hasZonedEvents ? html`
+              <button class="filter-chip ${this._zoneOnlyFilter ? 'active' : ''}" @click=${() => this._toggleZoneFilter()}>
+                In Zone
+              </button>
+            ` : ''}
+          </div>
+        ` : ''}
+
         <div class="timeline-wrapper">
-          ${this._historyMode === "events" ? this._renderEventsScroller(getMediaUrl) : this._renderTimelineScrubber()}
+          ${this._historyMode === "events" ? this._renderEventsScroller(getMediaUrl, filteredEvents) : this._renderTimelineScrubber()}
         </div>
-        
+
         ${this._historyMode === "timeline" ? html`
-        <div class="timeline-controls" style="display: flex; justify-content: center; gap: 16px; margin: 12px 16px;">
+          <div class="timeline-controls" style="display: flex; justify-content: center; gap: 16px; margin: 12px 16px;">
             <button class="action-btn" style="flex: 1; justify-content: center;" @click=${() => this._skipTimeline(-10)}>
-                <ha-icon icon="mdi:rewind-10" style="margin-right: 4px;"></ha-icon> -10s
+              <ha-icon icon="mdi:rewind-10" style="margin-right: 4px;"></ha-icon> -10s
             </button>
             <button class="action-btn" style="flex: 1; justify-content: center;" @click=${() => this._skipTimeline(10)}>
-                +10s <ha-icon icon="mdi:fast-forward-10" style="margin-left: 4px;"></ha-icon>
+              +10s <ha-icon icon="mdi:fast-forward-10" style="margin-left: 4px;"></ha-icon>
             </button>
-        </div>
-        <div class="timeline-legend">
-          <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>Person</div>
-          <div class="legend-item"><span class="legend-dot" style="background: #f59e0b;"></span>Vehicle</div>
-          <div class="legend-item"><span class="legend-dot" style="background: #10b981;"></span>Animal</div>
-          <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>Motion</div>
-        </div>
+          </div>
+          <div class="timeline-legend">
+            <div class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>Person</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #f59e0b;"></span>Vehicle</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #10b981;"></span>Animal</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>Motion</div>
+          </div>
         ` : ''}
       </div>
     `;
   }
 
+  _renderSelectedEventMeta(ev, camName, pre, post, getMediaUrl) {
+    const startStr = new Date(ev.start_time * 1000).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    const rawSub = Array.isArray(ev.sub_label) ? ev.sub_label[0] : ev.sub_label;
+    const subLabel = rawSub ? String(rawSub) : "";
+    const zones = Array.isArray(ev.zones) && ev.zones.length > 0 ? ev.zones.map(formatSettingName).join(", ") : "";
+    const trackedSec = (ev.end_time || Math.floor(Date.now() / 1000)) - ev.start_time;
+    const trackedLabel = ev.end_time ? `Tracked ${this._formatDuration(trackedSec)}` : "In Progress";
+
+    return html`
+      <div class="event-meta-bar">
+        <div class="event-meta-info">
+          <div class="event-meta-title">
+            <span>${formatSettingName(ev.label)}${subLabel ? ` · ${subLabel}` : ""}</span>
+            ${ev.has_clip && (pre > 0 || post > 0) ? html`
+              <span class="event-pad-pill">+${pre}s / +${post}s</span>
+            ` : ''}
+          </div>
+          <div class="event-meta-sub">
+            ${startStr} · ${trackedLabel}${zones ? ` · ${zones}` : ""}
+          </div>
+        </div>
+        <div class="event-meta-actions">
+          <button
+            class="meta-action-btn"
+            title="Jump to Timeline"
+            @click=${() => {
+              this._timelineCursorTime = Math.max(0, ev.start_time - pre);
+              this._historyMode = "timeline";
+            }}
+          >
+            ${Icons.History}
+            <span>Timeline</span>
+          </button>
+          ${ev.has_clip ? html`
+            <a
+              class="meta-action-btn"
+              href="${this._eventDownloadUrl || getMediaUrl(ev.id, "clip.mp4")}"
+              download="frigate-${camName}-${ev.id}.mp4"
+              target="_blank"
+              rel="noopener"
+              title="Download Clip"
+            >
+              ${Icons.Download}
+              <span>Clip</span>
+            </a>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // --- Shared VOD Stream Attacher ---
+  async _attachVodStream(videoEl, { vodUrl, startPosition = 0, isTimeline = false, onFallback = null, isStale = () => false }) {
+    const abortCtrl = new AbortController();
+    if (isTimeline) {
+      this._vodAbortController = abortCtrl;
+    } else {
+      this._eventAbortController = abortCtrl;
+    }
+    const { signal } = abortCtrl;
+
+    if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
+      videoEl.src = vodUrl;
+      videoEl.addEventListener(
+        "loadedmetadata",
+        () => {
+          if (isStale()) return;
+          this._loadingVod = false;
+          if (startPosition > 0) videoEl.currentTime = startPosition;
+          videoEl.play().catch((e) => {
+            if (e.name !== "NotSupportedError") console.warn(e);
+          });
+        },
+        { once: true, signal }
+      );
+      videoEl.addEventListener(
+        "error",
+        () => {
+          if (isStale()) return;
+          this._loadingVod = false;
+          if (onFallback) onFallback();
+          else this._showToast("Playback gap: Missing video segment.");
+        },
+        { once: true, signal }
+      );
+      return;
+    }
+
+    try {
+      const Hls = await this._loadHls();
+      if (isStale() || !videoEl.isConnected) return;
+
+      if (Hls.isSupported()) {
+        let networkRetries = 0;
+        let mediaRecovered = false;
+        const hls = new Hls({
+          startPosition,
+          xhrSetup: (xhr) => {
+            if (this.hass?.auth?.data?.access_token) {
+              xhr.setRequestHeader("Authorization", `Bearer ${this.hass.auth.data.access_token}`);
+            }
+          },
+        });
+        if (isTimeline) this._hls = hls;
+        else this._eventHls = hls;
+
+        hls.loadSource(vodUrl);
+        hls.attachMedia(videoEl);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (isStale()) return;
+          this._loadingVod = false;
+          videoEl.play().catch((e) => {
+            if (e.name !== "NotSupportedError") console.warn(e);
+          });
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (isStale() || !data.fatal) return;
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              if (networkRetries < 1) {
+                networkRetries++;
+                console.warn("HLS Network Error (likely a gap). Recovering...");
+                hls.startLoad();
+              } else {
+                hls.destroy();
+                if (isTimeline) this._hls = null;
+                else this._eventHls = null;
+                this._loadingVod = false;
+                if (onFallback) onFallback();
+                else this._showToast("Timeline gap: Playback stopped.");
+              }
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              if (!mediaRecovered) {
+                mediaRecovered = true;
+                console.warn("HLS Media Error. Recovering...");
+                hls.recoverMediaError();
+              } else {
+                hls.destroy();
+                if (isTimeline) this._hls = null;
+                else this._eventHls = null;
+                this._loadingVod = false;
+                if (onFallback) onFallback();
+                else this._showToast("Timeline playback error.");
+              }
+              break;
+            default:
+              hls.destroy();
+              if (isTimeline) this._hls = null;
+              else this._eventHls = null;
+              this._loadingVod = false;
+              if (onFallback) onFallback();
+              else this._showToast("Timeline gap: Playback stopped.");
+              break;
+          }
+        });
+      } else {
+        this._loadingVod = false;
+        if (onFallback) onFallback();
+      }
+    } catch (err) {
+      if (isStale()) return;
+      this._loadingVod = false;
+      if (onFallback) onFallback();
+      else this._showToast("Failed to load video player.");
+    }
+  }
+
+  async _setupEventVideo(ev) {
+    const reqId = ++this._eventVideoAbort;
+    this._destroyEventHls();
+    this._currentEventVideoId = ev.id;
+    this._eventDownloadUrl = null;
+    this._loadingVod = true;
+
+    await this.updateComplete;
+    if (reqId !== this._eventVideoAbort || this._activeTab !== "history" || this._historyMode !== "events") {
+      return;
+    }
+
+    const videoEl = this.shadowRoot?.querySelector("#history-video-event");
+    if (!videoEl) {
+      this._loadingVod = false;
+      return;
+    }
+
+    videoEl.pause();
+    videoEl.removeAttribute("src");
+    videoEl.load();
+
+    const { camName, clientId } = this._getFrigateCameraInfo();
+    const pre = Math.max(0, Number(this.config.clip_pre_capture ?? 5));
+    const post = Math.max(0, Number(this.config.clip_post_capture ?? 30));
+    const now = Math.floor(Date.now() / 1000);
+    const startTs = Math.max(0, Math.floor(ev.start_time - pre));
+    const rawEnd = ev.end_time ? Math.ceil(ev.end_time + post) : now;
+    const endTs = Math.min(now, Math.max(startTs + 1, rawEnd));
+
+    const rawVodUrl = `/api/frigate/${clientId}/vod/${camName}/start/${startTs}/end/${endTs}/index.m3u8`;
+    const rawRecordingUrl = `/api/frigate/${clientId}/recording/${camName}/start/${startTs}/end/${endTs}`;
+    const fallbackMp4Url = `/api/frigate/${clientId}/notifications/${ev.id}/clip.mp4`;
+
+    const [vodUrl, signedRecUrl] = await Promise.all([
+      this._signFrigateUrl(rawVodUrl),
+      this._signFrigateUrl(rawRecordingUrl),
+    ]);
+
+    if (reqId !== this._eventVideoAbort || !videoEl.isConnected || this._activeTab !== "history" || this._historyMode !== "events") {
+      return;
+    }
+
+    this._eventDownloadUrl = signedRecUrl !== rawRecordingUrl ? signedRecUrl : fallbackMp4Url;
+
+    let didFallback = false;
+    const fallbackToMp4 = () => {
+      if (didFallback || reqId !== this._eventVideoAbort || !videoEl.isConnected) return;
+      didFallback = true;
+      this._destroyEventHls();
+      this._currentEventVideoId = ev.id;
+      this._loadingVod = false;
+      videoEl.src = fallbackMp4Url;
+      videoEl.play().catch(() => {});
+    };
+
+    await this._attachVodStream(videoEl, {
+      vodUrl,
+      startPosition: 0,
+      isTimeline: false,
+      onFallback: fallbackToMp4,
+      isStale: () => reqId !== this._eventVideoAbort || !videoEl.isConnected,
+    });
+  }
+
   // --- Scroller Views for History ---
   _skipTimeline(seconds) {
-    if (!this._timelineCursorTime) return;
+    const { startOfDay } = this._getDateRange();
+    if (!this._timelineCursorTime) {
+      this._timelineCursorTime = this._getDefaultTimelineTime(startOfDay);
+    }
     this._timelineCursorTime += seconds;
     this._syncTimelineScroll();
-    
-    // Also seek the video natively if possible to avoid full HLS reload if within buffer
-    const videoEl = this.shadowRoot?.querySelector('#history-video-timeline');
-    if (videoEl && this._loadedVodStart) {
-        const newTime = this._timelineCursorTime - this._loadedVodStart;
-        if (newTime >= 0 && newTime <= videoEl.duration) {
-             videoEl.currentTime = newTime;
-             return;
-        }
-    }
-    
     this._handleTimelineSeek(this._timelineCursorTime);
   }
 
@@ -1281,51 +1925,66 @@ class CameraDashboardCard extends LitElement {
     if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
 
     const scrollLeft = e.currentTarget.scrollLeft;
-    const [year, month, day] = this._selectedDate.split("-").map(Number);
-    const startOfDay = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
-    
-    const cursorTime = startOfDay + (scrollLeft * 60);
+    const { startOfDay } = this._getDateRange();
+    const cursorTime = startOfDay + scrollLeft * 60;
     this._timelineCursorTime = cursorTime;
 
     if (this._scrollTimeout) clearTimeout(this._scrollTimeout);
     this._scrollTimeout = setTimeout(() => {
-        this._handleTimelineSeek(cursorTime);
+      this._handleTimelineSeek(cursorTime);
     }, 300);
-    
+
     this._seekClearTimeout = setTimeout(() => {
-        this._isSeeking = false;
-    }, 1500); 
+      this._isSeeking = false;
+    }, 1500);
   }
 
   _syncTimelineScroll() {
-    const scrollArea = this.shadowRoot?.querySelector('#timeline-scroll-area');
+    const scrollArea = this.shadowRoot?.querySelector("#timeline-scroll-area");
     if (!scrollArea) return;
     if (this._isPointerDown || this._isUserScrolling || this._isSeeking) return;
 
-    const [year, month, day] = this._selectedDate.split("-").map(Number);
-    const startOfDay = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
-    const targetScroll = (this._timelineCursorTime - startOfDay) / 60;
+    const { startOfDay } = this._getDateRange();
+    const cursorTime = this._timelineCursorTime || this._getDefaultTimelineTime(startOfDay);
+    const targetScroll = (cursorTime - startOfDay) / 60;
 
     this._programmaticScroll = true;
     scrollArea.scrollLeft = targetScroll;
 
     if (this._progScrollTimeout) clearTimeout(this._progScrollTimeout);
     this._progScrollTimeout = setTimeout(() => {
-        this._programmaticScroll = false;
+      this._programmaticScroll = false;
     }, 50);
   }
 
   _handleTimelineSeek(cursorTime) {
     const releaseSeekLock = () => {
-        if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
-        this._seekClearTimeout = setTimeout(() => this._isSeeking = false, 500);
+      if (this._seekClearTimeout) clearTimeout(this._seekClearTimeout);
+      this._seekClearTimeout = setTimeout(() => (this._isSeeking = false), 500);
     };
 
-    // Always fetch a new VOD playlist at the exact cursor time to prevent HLS gap drift
+    const videoEl = this.shadowRoot?.querySelector("#history-video-timeline");
+    if (
+      videoEl &&
+      this._loadedVodStart &&
+      this._loadedVodEnd &&
+      cursorTime >= this._loadedVodStart &&
+      cursorTime <= this._loadedVodEnd &&
+      Number.isFinite(videoEl.duration) &&
+      videoEl.duration > 0
+    ) {
+      const newTime = cursorTime - this._loadedVodStart;
+      if (newTime >= 0 && newTime <= videoEl.duration) {
+        videoEl.currentTime = newTime;
+        releaseSeekLock();
+        return;
+      }
+    }
+
     this._setupTimelineVideo(cursorTime).finally(() => releaseSeekLock());
   }
 
-  _renderEventsScroller(getMediaUrl) {
+  _renderEventsScroller(getMediaUrl, eventsToRender = this._events) {
     return html`
       <div class="timeline-scroll" style="touch-action: pan-x;"
              @pointerdown=${(e) => { e.stopPropagation(); this._isEventsPointerDown = true; this._eventsDragStartX = e.clientX; this._eventsDragStartScroll = e.currentTarget.scrollLeft; if(e.pointerType === 'mouse') e.currentTarget.setPointerCapture(e.pointerId); }}
@@ -1337,21 +1996,32 @@ class CameraDashboardCard extends LitElement {
              @touchmove=${(e) => { e.stopPropagation(); }}
              @touchend=${(e) => { e.stopPropagation(); }}
       >
-        ${this._events.length === 0 ? html`<div style="padding: 0 16px; color: var(--secondary-text-color); font-size: 13px;">No events recorded today.</div>` : ''}
-        ${this._events.map(ev => {
+        ${eventsToRender.length === 0
+          ? html`<div style="padding: 0 16px; color: var(--secondary-text-color); font-size: 13px;">${this._events.length === 0 ? "No events recorded for this date." : "No events match current filter."}</div>`
+          : ""}
+        ${eventsToRender.map((ev) => {
           const d = new Date(ev.start_time * 1000);
           const timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
           const icon = ev.label === 'person' ? Icons.User : ev.label === 'car' ? Icons.Car : ev.label === 'dog' ? Icons.Dog : Icons.Activity;
           const isActive = this._selectedEvent?.id === ev.id;
+          const durationBadge = ev.end_time ? this._formatDuration(ev.end_time - ev.start_time) : "Live";
+          const rawSub = Array.isArray(ev.sub_label) ? ev.sub_label[0] : ev.sub_label;
+          const zoneBadge = Array.isArray(ev.zones) && ev.zones.length > 0 ? formatSettingName(ev.zones[0]) : "";
+          const caption = rawSub ? String(rawSub) : (zoneBadge || formatSettingName(ev.label));
 
           return html`
-            <div class="timeline-node ${isActive ? 'active' : ''}" @click=${() => { this._selectedEvent = ev; }}>
+            <div class="timeline-node ${isActive ? 'active' : ''}" @click=${() => {
+              this._selectedEvent = ev;
+              this._timelineCursorTime = null;
+            }}>
               <div class="timeline-time">${timeStr}</div>
               <div class="timeline-dot-wrapper"><div class="timeline-dot"></div></div>
               <div class="timeline-thumb">
                 <img src="${getMediaUrl(ev.id, "thumbnail.jpg")}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'56\\'><rect width=\\'100\\' height=\\'56\\' fill=\\'%231e293b\\'/></svg>'"/>
+                <div class="timeline-duration-badge">${durationBadge}</div>
                 <div class="timeline-badge">${icon}</div>
               </div>
+              <div class="timeline-caption" title="${caption}">${caption}</div>
             </div>
           `;
         })}
@@ -1362,19 +2032,8 @@ class CameraDashboardCard extends LitElement {
   _renderTimelineScrubber() {
     if (!this._events) return html``;
 
-    const [year, month, day] = this._selectedDate.split("-").map(Number);
-    const startOfDay = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
-    const now = Math.floor(Date.now() / 1000);
-
-    let fallbackTime = startOfDay + 43200;
-    if (fallbackTime > now) fallbackTime = now - 60;
-
-    this.updateComplete.then(() => {
-        if (!this._programmaticScroll && !this._isPointerDown && !this._isUserScrolling) {
-            this._syncTimelineScroll();
-        }
-    });
-
+    const { startOfDay } = this._getDateRange();
+    const fallbackTime = this._getDefaultTimelineTime(startOfDay);
     const displayCursorTime = this._timelineCursorTime || (this._selectedEvent ? this._selectedEvent.start_time : fallbackTime);
 
     return html`
@@ -1415,155 +2074,110 @@ class CameraDashboardCard extends LitElement {
   }
 
   async _setupTimelineVideo(requestedTime = null) {
+    const reqId = ++this._timelineVideoAbort;
     await this.updateComplete;
-    const videoEl = this.shadowRoot.querySelector('#history-video-timeline');
+    if (reqId !== this._timelineVideoAbort || this._activeTab !== "history" || this._historyMode !== "timeline") {
+      return;
+    }
+    const videoEl = this.shadowRoot?.querySelector("#history-video-timeline");
     if (!videoEl) return;
 
-    const frigateCamEntity = this.config.frigate_camera_entity;
-    const camName = frigateCamEntity 
-        ? frigateCamEntity.split(".")[1] 
-        : this.config.camera_entity.split(".")[1].split("_")[0];
-    const clientId = this.config.frigate_client_id || "frigate";
-
-    const [year, month, day] = this._selectedDate.split("-").map(Number);
-    const startOfDay = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
+    const { camName, clientId } = this._getFrigateCameraInfo();
+    const { startOfDay } = this._getDateRange();
     const now = Math.floor(Date.now() / 1000);
 
     if (startOfDay > now) {
-        this._showToast("Cannot load future dates.");
-        return;
+      this._loadingVod = false;
+      this._showToast("Cannot load future dates.");
+      return;
     }
-    
-    let targetTime = requestedTime || this._timelineCursorTime || startOfDay + 43200;
 
+    let targetTime = requestedTime || this._timelineCursorTime || this._getDefaultTimelineTime(startOfDay);
     if (targetTime > now) {
-        targetTime = now - 60; // Offset by 1 minute to ensure recording chunk exists
+      targetTime = Math.max(startOfDay, now - 60);
     }
 
-    // Start window exactly 5 seconds before target time to prevent HLS gap collapse drift
-    let startWindow = Math.floor(targetTime - 5);
+    const startWindow = Math.floor(targetTime - 5);
     let endWindow = Math.floor(targetTime + 3600);
-
     if (endWindow > now) endWindow = now;
     if (startWindow > now) {
-        this._showToast("Cannot load future recordings.");
-        return;
+      this._loadingVod = false;
+      this._showToast("Cannot load future recordings.");
+      return;
     }
 
     this._loadedVodStart = startWindow;
     this._loadedVodEnd = endWindow;
-    const rawVodUrl = `/api/frigate/${clientId}/vod/${camName}/start/${startWindow}/end/${endWindow}/index.m3u8`;
+    this._loadingVod = true;
 
-    let vodUrl = rawVodUrl;
-    try {
-        const signRes = await this.hass.connection.sendMessagePromise({
-            type: "auth/sign_path", path: rawVodUrl, expires: 86400 // Extended to 24 hours
-        });
-        vodUrl = signRes.path;
-    } catch (e) {
-        try {
-            const signRes2 = await this.hass.connection.sendMessagePromise({
-                type: "frigate/sign_url", path: rawVodUrl, expires: 86400 // Extended to 24 hours
-            });
-            if (signRes2 && signRes2.path) vodUrl = signRes2.path;
-        } catch (e2) {}
+    const rawVodUrl = `/api/frigate/${clientId}/vod/${camName}/start/${startWindow}/end/${endWindow}/index.m3u8`;
+    const vodUrl = await this._signFrigateUrl(rawVodUrl);
+    if (reqId !== this._timelineVideoAbort || !videoEl.isConnected || this._activeTab !== "history" || this._historyMode !== "timeline") {
+      return;
     }
 
     const offset = Math.max(0, targetTime - startWindow);
+    this._destroyTimelineHls();
 
-    if (this._hls) {
-        this._hls.destroy();
-        this._hls = null;
-    }
-
-    if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-        videoEl.src = vodUrl;
-        videoEl.addEventListener('loadedmetadata', () => {
-            videoEl.currentTime = offset;
-            videoEl.play().catch(e => {
-                if(e.name !== 'NotSupportedError') console.warn(e);
-            });
-        }, { once: true });
-        videoEl.addEventListener('error', (e) => {
-           this._showToast("Playback gap: Missing video segment.");
-        });
-    } else {
-        try {
-            const { default: Hls } = await import("https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.mjs");
-            if (Hls.isSupported()) {
-                this._hls = new Hls({ 
-                    startPosition: offset,
-                    xhrSetup: (xhr, url) => {
-                        if (this.hass?.auth?.data?.access_token) {
-                            xhr.setRequestHeader('Authorization', `Bearer ${this.hass.auth.data.access_token}`);
-                        }
-                    }
-                });
-                this._hls.loadSource(vodUrl); 
-                this._hls.attachMedia(videoEl);
-                this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    videoEl.play().catch(e => {
-                        if(e.name !== 'NotSupportedError') console.warn(e);
-                    });
-                });
-                
-                // IMPORTANT: Automatically recover from 404 missing segments instead of crashing
-                this._hls.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
-                        switch (data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                console.warn("HLS Network Error (likely a gap). Recovering...");
-                                this._hls.startLoad();
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                console.warn("HLS Media Error. Recovering...");
-                                this._hls.recoverMediaError();
-                                break;
-                            default:
-                                this._hls.destroy();
-                                this._showToast("Timeline gap: Playback stopped.");
-                                break;
-                        }
-                    }
-                });
-            }
-        } catch (err) {
-            this._showToast("Failed to load timeline player.");
-        }
-    }
+    await this._attachVodStream(videoEl, {
+      vodUrl,
+      startPosition: offset,
+      isTimeline: true,
+      isStale: () => reqId !== this._timelineVideoAbort || !videoEl.isConnected,
+    });
   }
 
   // --- TAB: DETECTION ---
   _renderDetectionTab() {
-    const hasFrigate = this._entities.frigate_detect || this._entities.frigate_recordings || this._entities.frigate_snapshots;
+    const hasFrigate = this._entities.frigate_detect || this._entities.frigate_recordings || this._entities.frigate_snapshots || this._entities.frigate_last_face;
+    const hasReolinkAI =
+      this._entities.sens_person ||
+      this._entities.sens_vehicle ||
+      this._entities.sens_animal ||
+      this._entities.sens_motion ||
+      this._entities.auto_track_method ||
+      this._entities.siren_event ||
+      this._entities.email_event ||
+      this._entities.push_notif;
+    const lastFaceState = this._entities.frigate_last_face ? this.hass.states[this._entities.frigate_last_face]?.state : null;
 
     return html`
       ${hasFrigate ? html`
         <div class="card-panel" style="margin-bottom: 16px;">
-          <h4 class="panel-header">Frigate Configuration</h4>
+          <h4 class="panel-header">Frigate NVR Controls</h4>
           ${this._renderToggleRow(this._entities.frigate_detect, "Detect")}
           ${this._renderToggleRow(this._entities.frigate_motion, "Motion")}
           ${this._renderToggleRow(this._entities.frigate_recordings, "Recordings")}
           ${this._renderToggleRow(this._entities.frigate_snapshots, "Snapshots")}
           ${this._renderToggleRow(this._entities.frigate_review_alerts, "Review Alerts")}
           ${this._renderToggleRow(this._entities.frigate_review_detections, "Review Detections")}
+          ${this._entities.frigate_last_face ? html`
+            <div class="diag-row">
+              <span style="font-size: 14px; font-weight: 500;">Last Recognized Face</span>
+              <span style="font-size: 14px; font-weight: 600; color: var(--secondary-text-color);">${lastFaceState || "None"}</span>
+            </div>
+          ` : ''}
         </div>
       ` : ""}
 
-      <div class="card-panel">
-        <h4 class="panel-header">AI Smart Detection</h4>
-        ${this._renderSliderRow(this._entities.sens_person, "Person Sensitivity", Icons.User)}
-        ${this._renderSliderRow(this._entities.sens_vehicle, "Vehicle Sensitivity", Icons.Car)}
-        ${this._renderSliderRow(this._entities.sens_animal, "Animal Sensitivity", Icons.Dog)}
-        ${this._renderSliderRow(this._entities.sens_motion, "Standard Motion Sensitivity", Icons.Activity)}
+      ${hasReolinkAI ? html`
+        <div class="card-panel">
+          <h4 class="panel-header">Camera On-Device AI (Reolink)</h4>
+          ${this._renderSliderRow(this._entities.sens_person, "Person Sensitivity", Icons.User)}
+          ${this._renderSliderRow(this._entities.sens_vehicle, "Vehicle Sensitivity", Icons.Car)}
+          ${this._renderSliderRow(this._entities.sens_animal, "Animal Sensitivity", Icons.Dog)}
+          ${this._renderSliderRow(this._entities.sens_motion, "Standard Motion Sensitivity", Icons.Activity)}
 
-        <div class="spacer"></div>
-        <h4 class="panel-header">Tracking & Reactions</h4>
-        ${this._renderSelectRow(this._entities.auto_track_method, "Auto Track Method")}
-        ${this._renderToggleRow(this._entities.siren_event, "Siren on Event")}
-        ${this._renderToggleRow(this._entities.email_event, "Email on Event")}
-        ${this._renderToggleRow(this._entities.push_notif, "Push Notifications")}
-      </div>
+          ${(this._entities.auto_track_method || this._entities.siren_event || this._entities.email_event || this._entities.push_notif) ? html`
+            <div class="spacer"></div>
+            <h4 class="panel-header">Camera Tracking & Reactions</h4>
+            ${this._renderSelectRow(this._entities.auto_track_method, "Auto Track Method")}
+            ${this._renderToggleRow(this._entities.siren_event, "Siren on Event")}
+            ${this._renderToggleRow(this._entities.email_event, "Email on Event")}
+            ${this._renderToggleRow(this._entities.push_notif, "Push Notifications")}
+          ` : ''}
+        </div>
+      ` : ""}
       ${this._renderPopup(this._entities.auto_track_method, "Auto Track Method")}
     `;
   }
@@ -1683,7 +2297,7 @@ class CameraDashboardCard extends LitElement {
           step="${step}"
           .value=${currentVal}
           @input=${(e) => { this._sliderVals[entity_id] = e.target.value; this.requestUpdate(); }}
-          @change=${() => this._setNum(entity_id, this._sliderVals[entity_id])}
+          @change=${() => this._commitSlider(entity_id, entity_id)}
           style="width: 100%; accent-color: var(--primary-color);"
         />
       </div>
@@ -1754,7 +2368,7 @@ class CameraDashboardCard extends LitElement {
         position: absolute;
         bottom: 12px;
         right: 12px;
-        pointer-events: auto; 
+        pointer-events: auto;
         background: rgba(0, 0, 0, 0.6);
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1766,13 +2380,95 @@ class CameraDashboardCard extends LitElement {
         display: flex;
         align-items: center;
         backdrop-filter: blur(4px);
-        transition: background 0.2s;
+        transition: background 0.2s, border-color 0.2s;
         z-index: 3;
       }
       .lens-toggle:active {
         background: rgba(0, 0, 0, 0.8);
       }
-      
+      .lens-toggle.quality-4k {
+        background: rgba(2, 132, 199, 0.78);
+        border-color: rgba(125, 211, 252, 0.55);
+      }
+
+      .live-br-controls {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        z-index: 6;
+        pointer-events: none;
+      }
+      .live-br-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .live-br-controls .lens-toggle,
+      .live-br-controls .mic-toggle-btn {
+        position: static;
+      }
+
+      .overlay-icon-btn {
+        position: absolute;
+        pointer-events: auto;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        cursor: pointer;
+        z-index: 6;
+        transition: background 0.2s, transform 0.1s;
+      }
+      .overlay-icon-btn:active {
+        transform: scale(0.92);
+        background: rgba(0, 0, 0, 0.82);
+      }
+      .live-fs-btn {
+        top: 12px;
+        right: 12px;
+      }
+      .live-mute-btn {
+        bottom: 12px;
+        left: 12px;
+      }
+
+      .mic-live-banner {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 6;
+        pointer-events: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(220, 38, 38, 0.88);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      }
+      .mic-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #fff;
+        animation: pulse-mic 1.5s infinite;
+      }
+
       .mic-toggle-btn {
         position: absolute;
         bottom: 52px;
@@ -1790,7 +2486,7 @@ class CameraDashboardCard extends LitElement {
         cursor: pointer;
         z-index: 5;
         transition: all 0.3s ease;
-        pointer-events: auto; /* Ensures it works over the video */
+        pointer-events: auto;
       }
       .mic-toggle-btn:active {
         transform: scale(0.92);
@@ -1806,6 +2502,10 @@ class CameraDashboardCard extends LitElement {
         0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
         70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
         100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
       }
 
       /* FULLSCREEN VIDEO SUPPORT & LANDSCAPE PTZ OVERLAY */
@@ -1865,7 +2565,10 @@ class CameraDashboardCard extends LitElement {
       }
       .camera-box:fullscreen .fs-control-fade.fs-hidden, 
       .camera-box:-webkit-full-screen .fs-control-fade.fs-hidden,
-      .camera-box.pseudo-fullscreen .fs-control-fade.fs-hidden {
+      .camera-box.pseudo-fullscreen .fs-control-fade.fs-hidden,
+      .camera-box:fullscreen .fs-control-fade.fs-hidden *, 
+      .camera-box:-webkit-full-screen .fs-control-fade.fs-hidden *,
+      .camera-box.pseudo-fullscreen .fs-control-fade.fs-hidden * {
         opacity: 0;
         pointer-events: none;
       }
@@ -2106,21 +2809,7 @@ class CameraDashboardCard extends LitElement {
         box-shadow: 0 0 6px var(--error-color, #ef4444);
       }
 
-      /* --- BOTTOM SHEET ANIMATION & WRAPPER --- */
-      .sheet-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        align-items: center;
-        animation: fadeIn 0.3s ease-out;
-        transition: opacity 0.3s ease;
-        overscroll-behavior: none;
-      }
+      /* --- POPUP CONTAINER & STATUS BAR --- */
       .sheet-content {
         position: relative;
         width: 100%;
@@ -2128,7 +2817,7 @@ class CameraDashboardCard extends LitElement {
         flex-direction: column;
         overflow: hidden;
       }
-      
+
       /* --- PSEUDO FULLSCREEN PARENT OVERRIDES --- */
       .sheet-content.pseudo-fs-parent {
         transform: none !important;
@@ -2142,8 +2831,7 @@ class CameraDashboardCard extends LitElement {
         background: #000 !important;
       }
       .sheet-content.pseudo-fs-parent .header,
-      .sheet-content.pseudo-fs-parent .nav,
-      .sheet-content.pseudo-fs-parent .sheet-drag-handle {
+      .sheet-content.pseudo-fs-parent .nav {
         display: none !important;
       }
       .sheet-content.pseudo-fs-parent .content-area {
@@ -2151,48 +2839,55 @@ class CameraDashboardCard extends LitElement {
         overflow: hidden !important;
       }
 
-      .sheet-drag-handle {
-        width: 40px;
-        height: 4px;
-        background: var(--divider-color, #cbd5e1);
-        border-radius: 2px;
-        margin: 12px auto 4px auto;
-        flex-shrink: 0;
-      }
       .sheet-container {
         display: flex;
         flex-direction: column;
-        overflow: hidden; 
+        overflow: hidden;
       }
 
-      /* --- ORIGINAL UI STYLES --- */
       .header {
-        padding: 16px 16px 0;
+        padding: 12px 16px;
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
+        align-items: center;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
-        padding-bottom: 16px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         flex-shrink: 0;
+        gap: 12px;
       }
       .header-left {
         display: flex;
         flex-direction: column;
+        min-width: 0;
       }
-      .title {
-        font-size: 24px;
-        font-weight: 500;
-        margin: 0;
-        letter-spacing: -0.01em;
+      .popup-status-row {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
       }
-      .subtitle {
+      .popup-status-row .status-dot {
+        margin-right: 0;
+      }
+      .popup-status-text {
         color: var(--secondary-text-color, #757575);
-        font-size: 14px;
-        margin: 0;
-        margin-top: 4px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .face-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(var(--rgb-primary-color, 37, 99, 235), 0.14);
+        color: var(--primary-color, #2563eb);
+      }
+      .face-pill svg {
+        width: 12px;
+        height: 12px;
       }
 
       .status-chip {
@@ -2335,6 +3030,113 @@ class CameraDashboardCard extends LitElement {
         background: var(--ha-card-background, #fff);
         color: var(--primary-text-color);
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      .icon-pill-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: var(--secondary-background-color, #f1f5f9);
+        color: var(--secondary-text-color);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+      }
+      .icon-pill-btn:hover {
+        color: var(--primary-text-color);
+      }
+      .icon-pill-btn.spinning svg {
+        animation: spin 0.9s linear infinite;
+      }
+
+      .filter-chips-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 16px 10px;
+      }
+      .filter-chip {
+        border: 1px solid var(--divider-color, #e2e8f0);
+        background: var(--secondary-background-color, #f1f5f9);
+        color: var(--secondary-text-color);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .filter-chip.active {
+        background: var(--primary-color, #2563eb);
+        color: var(--text-primary-color, #fff);
+        border-color: var(--primary-color, #2563eb);
+      }
+
+      .event-meta-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--ha-card-background, #fff);
+        border: 1px solid var(--divider-color, #e2e8f0);
+        border-radius: var(--ha-card-border-radius, 12px);
+        flex-wrap: wrap;
+      }
+      .event-meta-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+      }
+      .event-meta-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+      .event-pad-pill {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(var(--rgb-primary-color, 37, 99, 235), 0.14);
+        color: var(--primary-color, #2563eb);
+      }
+      .event-meta-sub {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+      }
+      .event-meta-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .meta-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 11px;
+        border-radius: 10px;
+        border: 1px solid var(--divider-color, #e2e8f0);
+        background: var(--secondary-background-color, #f1f5f9);
+        color: var(--primary-text-color);
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .meta-action-btn svg {
+        width: 14px;
+        height: 14px;
       }
       
       .global-timeline-viewport {
@@ -2563,6 +3365,28 @@ class CameraDashboardCard extends LitElement {
       .timeline-badge svg {
         width: 12px;
         height: 12px;
+      }
+      .timeline-duration-badge {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 5px;
+        border-radius: 4px;
+        line-height: 1.2;
+      }
+      .timeline-caption {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--secondary-text-color);
+        max-width: 100px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: center;
       }
 
       .control-pill {
@@ -2892,8 +3716,13 @@ class CameraDashboardEditor extends LitElement {
     { name: "frigate_client_id", label: "Frigate Integration ID", selector: { text: {} } },
     { name: "frigate_camera_entity", label: "Frigate Camera Entity", selector: { entity: { domain: "camera" } } },
     { name: "title", label: "Title Override", selector: { text: {} } },
+    { name: "clip_pre_capture", label: "Clip Pre-Capture (seconds)", selector: { number: { min: 0, max: 60, step: 1, mode: "box" } } },
+    { name: "clip_post_capture", label: "Clip Post-Capture (seconds)", selector: { number: { min: 0, max: 120, step: 1, mode: "box" } } },
+    { name: "talk_stream_suffix", label: "Two-Way Talk Stream Suffix", selector: { text: {} } },
+    { name: "use_frigate_badges", label: "Use Frigate Sensors for Badges", selector: { boolean: {} } },
     { name: "hide_ptz", label: "Hide PTZ Controls", selector: { boolean: {} } },
     { name: "hide_zoom", label: "Hide Zoom Slider", selector: { boolean: {} } },
+    { name: "hide_mic", label: "Hide Microphone Button", selector: { boolean: {} } },
   ];
 
   _valueChanged(ev) {
@@ -2948,8 +3777,13 @@ CameraDashboardCard.getStubConfig = (hass, entities, entitiesFallback) => {
     camera_entity: cameraEntity,
     frigate_client_id: "frigate",
     frigate_camera_entity: "",
+    clip_pre_capture: 5,
+    clip_post_capture: 30,
+    talk_stream_suffix: "_talk",
+    use_frigate_badges: true,
     hide_ptz: false,
     hide_zoom: false,
+    hide_mic: false,
   };
 };
 

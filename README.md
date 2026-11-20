@@ -46,8 +46,13 @@ title: Front Yard Camera
 camera_entity: camera.front_yard_live
 frigate_client_id: frigate
 frigate_camera_entity: camera.front_yard_frigate
+clip_pre_capture: 5
+clip_post_capture: 30
+talk_stream_suffix: _talk
+use_frigate_badges: true
 hide_ptz: false
 hide_zoom: false
+hide_mic: false
 ```
 
 ---
@@ -61,8 +66,13 @@ hide_zoom: false
 | `frigate_client_id` | string | `frigate` | Client ID for your Frigate integration backend. |
 | `frigate_camera_entity` | string | optional | Secondary camera entity ID if using Frigate separately. |
 | `title` | string | optional | Title override displayed in the header. |
+| `clip_pre_capture` | number | `5` | Seconds of footage included before each History event start. |
+| `clip_post_capture` | number | `30` | Seconds of footage included after each History event end. |
+| `talk_stream_suffix` | string | `_sub` | go2rtc stream suffix used when two-way mic is active (e.g. `_talk`). |
+| `use_frigate_badges` | boolean | `false` | Drive status badges from Frigate occupancy sensors instead of camera sensors. |
 | `hide_ptz` | boolean | `false` | Hide the PTZ directional D-pad control panel. |
 | `hide_zoom` | boolean | `false` | Hide the vertical zoom control slider. |
+| `hide_mic` | boolean | `false` | Hide the two-way audio microphone toggle button. |
 
 ---
 
