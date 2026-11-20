@@ -1,4 +1,4 @@
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.1.1";
 
 const LitElement = Object.getPrototypeOf(
   customElements.get("hui-entities-card")
@@ -1594,14 +1594,14 @@ class CameraDashboardCard extends LitElement {
 
       ${this._historyMode === "events" && activeEvent ? this._renderSelectedEventMeta(activeEvent, camName, pre, post, getMediaUrl) : ''}
 
-      <div class="card-panel" style="padding: 14px 0; border: none; background: transparent; box-shadow: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 16px; margin-bottom: 10px; gap: 8px;">
-          <div class="history-toggle-wrap" style="flex: 1; max-width: 240px;">
+      <div class="history-controls-panel">
+        <div class="history-toolbar">
+          <div class="history-toggle-wrap">
             <button class="history-toggle-btn ${this._historyMode === 'events' ? 'active' : ''}" @click=${() => (this._historyMode = 'events')}>Events</button>
             <button class="history-toggle-btn ${this._historyMode === 'timeline' ? 'active' : ''}" @click=${() => (this._historyMode = 'timeline')}>Timeline</button>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+          <div class="history-date-actions">
             <div class="date-picker-wrap">
               ${Icons.Calendar}
               <input
@@ -1621,6 +1621,7 @@ class CameraDashboardCard extends LitElement {
             <button
               class="icon-pill-btn ${this._fetchingEvents ? 'spinning' : ''}"
               title="Refresh events"
+              aria-label="Refresh events"
               @click=${() => this._fetchEvents(true)}
             >
               ${Icons.RefreshCw}
@@ -1651,7 +1652,7 @@ class CameraDashboardCard extends LitElement {
         </div>
 
         ${this._historyMode === "timeline" ? html`
-          <div class="timeline-controls" style="display: flex; justify-content: center; gap: 16px; margin: 12px 16px;">
+          <div class="timeline-controls" style="display: flex; justify-content: center; gap: 12px; margin: 12px 0;">
             <button class="action-btn" style="flex: 1; justify-content: center;" @click=${() => this._skipTimeline(-10)}>
               <ha-icon icon="mdi:rewind-10" style="margin-right: 4px;"></ha-icon> -10s
             </button>
@@ -2860,6 +2861,9 @@ class CameraDashboardCard extends LitElement {
         flex-direction: column;
         min-width: 0;
       }
+      .header-right {
+        flex-shrink: 0;
+      }
       .popup-status-row {
         display: flex;
         align-items: center;
@@ -2957,6 +2961,8 @@ class CameraDashboardCard extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 16px;
+        min-width: 0;
+        box-sizing: border-box;
       }
 
       .camera-box {
@@ -2978,16 +2984,47 @@ class CameraDashboardCard extends LitElement {
         z-index: 2;
       }
       
+      .history-controls-panel {
+        padding: 2px 0 0;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        container-type: inline-size;
+      }
+      .history-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .history-date-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: 100%;
+      }
       .date-picker-wrap {
         display: flex;
         align-items: center;
         gap: 6px;
         background: var(--secondary-background-color, #f1f5f9);
         padding: 6px 12px;
-        border-radius: 16px;
+        border-radius: 18px;
+        min-width: 0;
+        max-width: 100%;
+        height: 36px;
+        box-sizing: border-box;
       }
       .date-picker-wrap svg {
         color: var(--secondary-text-color);
+        flex-shrink: 0;
       }
       .history-date-picker {
         background: transparent;
@@ -2998,33 +3035,41 @@ class CameraDashboardCard extends LitElement {
         font-weight: 500;
         outline: none;
         cursor: pointer;
+        min-width: 0;
+        max-width: 100%;
       }
       .history-date-picker::-webkit-calendar-picker-indicator {
         cursor: pointer;
       }
       
       .history-player {
-        margin-bottom: 8px;
+        margin-bottom: 0;
       }
 
       .history-toggle-wrap {
         display: flex;
+        flex: 1 1 170px;
+        max-width: 220px;
+        min-width: 0;
         background: var(--secondary-background-color, #f1f5f9);
         border-radius: var(--control-circular-border-radius, 9999px);
         padding: 4px;
         gap: 4px;
+        box-sizing: border-box;
       }
       .history-toggle-btn {
         flex: 1;
+        min-width: 0;
         border: none;
         background: transparent;
-        padding: 6px 16px;
+        padding: 6px 12px;
         border-radius: var(--control-circular-border-radius, 9999px);
         font-size: 13px;
         font-weight: 600;
         color: var(--secondary-text-color);
         cursor: pointer;
         transition: all 0.2s;
+        white-space: nowrap;
       }
       .history-toggle-btn.active {
         background: var(--ha-card-background, #fff);
@@ -3036,8 +3081,9 @@ class CameraDashboardCard extends LitElement {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
         border-radius: 50%;
         border: none;
         background: var(--secondary-background-color, #f1f5f9);
@@ -3056,7 +3102,7 @@ class CameraDashboardCard extends LitElement {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        padding: 0 16px 10px;
+        padding: 0 0 10px;
       }
       .filter-chip {
         border: 1px solid var(--divider-color, #e2e8f0);
@@ -3085,6 +3131,8 @@ class CameraDashboardCard extends LitElement {
         border: 1px solid var(--divider-color, #e2e8f0);
         border-radius: var(--ha-card-border-radius, 12px);
         flex-wrap: wrap;
+        width: 100%;
+        box-sizing: border-box;
       }
       .event-meta-info {
         display: flex;
@@ -3118,6 +3166,7 @@ class CameraDashboardCard extends LitElement {
         align-items: center;
         gap: 8px;
         flex-shrink: 0;
+        flex-wrap: wrap;
       }
       .meta-action-btn {
         display: inline-flex;
@@ -3281,8 +3330,8 @@ class CameraDashboardCard extends LitElement {
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 16px;
-        padding: 12px 16px 4px;
+        gap: 10px 16px;
+        padding: 8px 0 4px;
         flex-wrap: wrap;
       }
       .legend-item {
@@ -3681,7 +3730,52 @@ class CameraDashboardCard extends LitElement {
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
+      @container (max-width: 430px) {
+        .history-toolbar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+        .history-toggle-wrap {
+          flex: none;
+          width: 100%;
+          max-width: none;
+        }
+        .history-date-actions {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .date-picker-wrap {
+          flex: 1 1 auto;
+        }
+        .history-date-picker {
+          flex: 1 1 auto;
+          width: 100%;
+        }
+      }
+
       @media (max-width: 480px) {
+        .history-toolbar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+        .history-toggle-wrap {
+          flex: none;
+          width: 100%;
+          max-width: none;
+        }
+        .history-date-actions {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .date-picker-wrap {
+          flex: 1 1 auto;
+        }
+        .history-date-picker {
+          flex: 1 1 auto;
+          width: 100%;
+        }
         .ptz-layout {
           gap: 8px;
           flex-wrap: nowrap; 
@@ -3699,6 +3793,10 @@ class CameraDashboardCard extends LitElement {
         .ptz-side { min-width: 0; width: auto; flex: 1; max-width: none; gap: 6px; }
         .control-btn { width: 36px; height: 36px; }
         .action-btn { font-size: 11px; padding: 8px 4px; }
+      }
+
+      @media (max-width: 380px) {
+        .nav { gap: 8px; }
       }
     `;
   }

@@ -5,6 +5,12 @@ All notable changes to **Passable Camera Card** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-19
+
+### Fixed
+- **Responsive History Toolbar & Mobile Alignment**: Replaced the non-wrapping History toolbar row with a container-aware responsive layout that stacks cleanly on narrow/phone viewports (`@container (max-width: 430px)` and `@media (max-width: 480px)`) so the Refresh button and date picker never overflow off-screen.
+- **History Layout Polish**: Removed redundant horizontal padding inside `.content-area` (`filter-chips-row`, `history-controls-panel`, `timeline-controls`, and `timeline-legend`) so controls align flush with the video player and event metadata card, matched `.date-picker-wrap` and `.icon-pill-btn` height (`36px`), protected `.header-right` from shrinking, and trimmed extra `.history-player` bottom spacing.
+
 ## [1.1.0] - 2026-11-19
 
 ### Added
